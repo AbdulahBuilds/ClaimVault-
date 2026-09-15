@@ -1,10 +1,10 @@
 /**
- * ClaimVault PWA Offline Service Worker (Phase 16)
- * Caches core app shell and provides instant offline access.
+ * ClaimVault PWA Service Worker (v1.0.2)
+ * High-performance offline caching with strict MIME isolation.
  */
 
-const CACHE_NAME = 'claimvault-v1.0.0';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'claimvault-v1.0.2';
+const STATIC_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
@@ -12,15 +12,17 @@ const STATIC_ASSETS = [
   '/icons/icon-512.svg',
 ];
 
+// Install: Cache static app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_SHELL);
     })
   );
   self.skipWaiting();
 });
 
+// Activate: Immediately purge all old versions and take control
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -36,34 +38,53 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Fetch: Strategy router
 self.addEventListener('fetch', (event) => {
-  // Only intercept GET requests
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
 
-  // Let API requests pass through with network-first
-  if (event.request.url.includes('/api/')) {
+  // 1. Ignore non-GET and backend API requests
+  if (request.method !== 'GET' || request.url.includes('/api/')) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request)
+  // 2. HTML Navigation requests: Network-first, fallback to cached index.html
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
         .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('/', copy));
           }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
           return response;
         })
         .catch(() => {
-          return caches.match('/');
+          return caches.match('/') || caches.match('/index.html');
+        })
+    );
+    return;
+  }
+
+  // 3. Static assets (JS, CSS, images, icons, fonts): Cache-first with background network refresh
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseToCache);
         });
+
+        return networkResponse;
+      });
+      // NOTE: Do NOT return index.html fallback for script/style assets to prevent MIME type mismatch
     })
   );
 });
