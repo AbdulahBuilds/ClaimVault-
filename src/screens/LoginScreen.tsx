@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
-import { GoogleAuthModal, GoogleAccount } from '../components/modals/GoogleAuthModal';
+import { googleAuthService } from '../services/googleAuthService';
 import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface LoginScreenProps {
@@ -23,7 +23,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const { login, loginWithGoogle } = useAuth();
@@ -76,16 +75,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const handleSelectGoogleAccount = async (account: GoogleAccount) => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await loginWithGoogle(account);
-      showToast(`Signed in as ${account.name} with Google`, 'success');
+      const googleUser = await googleAuthService.signInWithGoogle();
+      await loginWithGoogle(googleUser);
+      showToast(`Signed in as ${googleUser.name} with Google`, 'success');
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-    } catch {
-      showToast('Google login failed', 'error');
+    } catch (err: any) {
+      if (err.message && !err.message.includes('closed') && !err.message.includes('cancelled')) {
+        showToast(err.message || 'Google Sign-In failed', 'error');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +178,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="space-y-2.5">
           <button
             type="button"
-            onClick={() => setIsGoogleModalOpen(true)}
+            onClick={handleGoogleSignIn}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-brand-border hover:bg-slate-50 transition active:scale-[0.98] text-xs font-bold text-brand-navy"
           >
@@ -225,13 +227,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </button>
         </p>
       </div>
-
-      {/* Google Account Chooser Modal */}
-      <GoogleAuthModal
-        isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
-        onSelectAccount={handleSelectGoogleAccount}
-      />
     </div>
   );
 };
