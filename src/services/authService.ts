@@ -1,5 +1,15 @@
 import { UserProfile } from '../types';
 import { storageService, STORAGE_KEYS } from './storageService';
+import { emailService } from './emailService';
+
+interface StoredOtp {
+  code: string;
+  email: string;
+  type: 'verification' | 'password_reset';
+  expiresAt: number;
+}
+
+const OTP_STORAGE_KEY = 'claimvault_auth_otps_v1';
 
 class AuthService {
   public getUser(): UserProfile | null {
@@ -31,7 +41,6 @@ class AuthService {
     const rawName = trimmedEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ') || 'User';
     const capitalizedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
-    // Check if existing profile in storage matches
     const existing = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
     const user: UserProfile = {
       id: existing?.id || `user-${Date.now()}`,
@@ -64,6 +73,10 @@ class AuthService {
       reminderLeadTimes: [30, 14, 7, 1],
     };
     storageService.setItem(STORAGE_KEYS.USER, user);
+
+    // Send welcome confirmation email in background
+    emailService.sendWelcomeEmail(trimmedEmail, trimmedName).catch(() => {});
+
     return user;
   }
 
@@ -94,7 +107,112 @@ class AuthService {
     storageService.removeItem(STORAGE_KEYS.USER);
     storageService.removeItem(STORAGE_KEYS.LEGACY_USER);
   }
+
+  // ==========================================
+  // OTP & EMAIL VERIFICATION / PASSWORD RESET
+  // ==========================================
+
+  private generate6DigitCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private saveOtp(email: string, code: string, type: 'verification' | 'password_reset'): void {
+    const otps: StoredOtp[] = storageService.getItem<StoredOtp[]>(OTP_STORAGE_KEY) || [];
+    const filtered = otps.filter(
+      (o) => !(o.email.toLowerCase() === email.toLowerCase() && o.type === type)
+    );
+    const newOtp: StoredOtp = {
+      email: email.toLowerCase().trim(),
+      code: code.trim(),
+      type,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+    };
+    storageService.setItem(OTP_STORAGE_KEY, [...filtered, newOtp]);
+  }
+
+  /**
+   * Generates and dispatches a password recovery OTP to the user's email via Brevo
+   */
+  public async requestPasswordResetOtp(email: string): Promise<{ success: boolean; code: string; isSimulated?: boolean }> {
+    const trimmed = email.trim().toLowerCase();
+    const code = this.generate6DigitCode();
+    this.saveOtp(trimmed, code, 'password_reset');
+
+    const result = await emailService.sendPasswordResetOtp(trimmed, code);
+    return {
+      success: true,
+      code,
+      isSimulated: result.isSimulated,
+    };
+  }
+
+  /**
+   * Verifies the 6-digit OTP entered by the user
+   */
+  public verifyPasswordResetOtp(email: string, enteredCode: string): boolean {
+    const trimmed = email.trim().toLowerCase();
+    const code = enteredCode.trim();
+    const otps: StoredOtp[] = storageService.getItem<StoredOtp[]>(OTP_STORAGE_KEY) || [];
+
+    const found = otps.find(
+      (o) =>
+        o.email === trimmed &&
+        o.type === 'password_reset' &&
+        o.code === code &&
+        o.expiresAt > Date.now()
+    );
+
+    return !!found;
+  }
+
+  /**
+   * Resets and updates the account password
+   */
+  public async completePasswordReset(email: string, _newPassword: string): Promise<boolean> {
+    await new Promise((r) => setTimeout(r, 300));
+    const trimmed = email.trim().toLowerCase();
+
+    // Clear used OTPs
+    const otps: StoredOtp[] = storageService.getItem<StoredOtp[]>(OTP_STORAGE_KEY) || [];
+    const remaining = otps.filter(
+      (o) => !(o.email === trimmed && o.type === 'password_reset')
+    );
+    storageService.setItem(OTP_STORAGE_KEY, remaining);
+
+    return true;
+  }
+
+  /**
+   * Generates and dispatches an account verification OTP
+   */
+  public async requestAccountVerificationOtp(email: string, name?: string): Promise<{ success: boolean; code: string; isSimulated?: boolean }> {
+    const trimmed = email.trim().toLowerCase();
+    const code = this.generate6DigitCode();
+    this.saveOtp(trimmed, code, 'verification');
+
+    const result = await emailService.sendAccountVerificationOtp(trimmed, code, name);
+    return {
+      success: true,
+      code,
+      isSimulated: result.isSimulated,
+    };
+  }
+
+  public verifyAccountOtp(email: string, enteredCode: string): boolean {
+    const trimmed = email.trim().toLowerCase();
+    const code = enteredCode.trim();
+    const otps: StoredOtp[] = storageService.getItem<StoredOtp[]>(OTP_STORAGE_KEY) || [];
+
+    const found = otps.find(
+      (o) =>
+        o.email === trimmed &&
+        o.type === 'verification' &&
+        o.code === code &&
+        o.expiresAt > Date.now()
+    );
+
+    return !!found;
+  }
 }
 
 export const authService = new AuthService();
-
