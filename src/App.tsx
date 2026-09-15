@@ -64,6 +64,8 @@ const AppNavigator: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && (currentView === 'login' || currentView === 'signup' || currentView === 'forgot_password')) {
       setCurrentView('main');
+    } else if (!isAuthenticated && currentView !== 'onboarding' && currentView !== 'login' && currentView !== 'signup' && currentView !== 'forgot_password') {
+      setCurrentView('login');
     }
   }, [isAuthenticated, currentView]);
 

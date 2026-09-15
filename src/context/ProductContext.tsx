@@ -26,6 +26,8 @@ interface ProductContextType {
   getProductById: (id: string) => Product | undefined;
   dismissReminder: (reminderId: string) => void;
   restoreDefaults: () => Promise<void>;
+  loadSampleData: () => Promise<void>;
+  clearAllProducts: () => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -378,6 +380,20 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     showToast('Reset sample products to default', 'info');
   };
 
+  const loadSampleData = async () => {
+    const samples = await productService.loadSampleData();
+    setProducts(samples);
+    showToast('Loaded 12 sample products into vault', 'success');
+  };
+
+  const clearAllProducts = async () => {
+    await productService.clearAll();
+    setProducts([]);
+    setDismissedReminders([]);
+    storageService.removeItem(STORAGE_KEYS.DISMISSED_REMINDERS);
+    showToast('Cleared all products from vault', 'info');
+  };
+
   return (
     <ProductContext.Provider
       value={{
@@ -400,6 +416,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         getProductById,
         dismissReminder,
         restoreDefaults,
+        loadSampleData,
+        clearAllProducts,
       }}
     >
       {children}

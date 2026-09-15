@@ -21,19 +21,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<UserProfile | null>(() => authService.getUser());
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState<boolean>(() => authService.isOnboardingCompleted());
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    const initAuth = () => {
-      const currentUser = authService.getUser();
-      const onboardingDone = authService.isOnboardingCompleted();
-      setUser(currentUser);
-      setIsOnboardingCompleted(onboardingDone);
-      setIsLoading(false);
-    };
-    initAuth();
+    // Re-verify in background on mount
+    const currentUser = authService.getUser();
+    const onboardingDone = authService.isOnboardingCompleted();
+    setUser(currentUser);
+    setIsOnboardingCompleted(onboardingDone);
   }, []);
 
   const login = async (email: string, password?: string) => {

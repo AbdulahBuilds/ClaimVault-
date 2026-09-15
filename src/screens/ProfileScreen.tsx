@@ -99,11 +99,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
                 {user?.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
-                    alt={user?.name || 'Abdullah'}
+                    alt={user?.name || 'User'}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span>{(user?.name || 'A').charAt(0)}</span>
+                  <span>{(user?.name || 'U').charAt(0)}</span>
                 )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-brand-teal text-white flex items-center justify-center border-2 border-white">
@@ -114,14 +114,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-extrabold text-brand-navy truncate group-hover:text-brand-teal transition">
-                  {user?.name || 'Abdullah'}
+                  {user?.name || 'User'}
                 </h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-teal text-white shadow-sm">
                   PRO
                 </span>
               </div>
               <p className="text-xs text-brand-muted truncate mt-0.5">
-                {user?.email || 'abdullah@example.com'}
+                {user?.email || 'user@claimvault.com'}
               </p>
               <p className="text-[10px] text-brand-muted mt-0.5 flex items-center gap-1">
                 <UserCheck className="w-3 h-3 text-brand-teal" /> Verified Vault Owner
@@ -145,7 +145,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
               Total Protected Value
             </span>
             <p className="text-lg font-extrabold text-white mt-0.5">
-              {formatPKR(stats.totalProtectedValue || 590498)}
+              {formatPKR(stats.totalProtectedValue || 0)}
             </p>
           </div>
           <div className="text-right">

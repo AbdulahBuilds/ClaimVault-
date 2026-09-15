@@ -12,10 +12,10 @@ interface SignupScreenProps {
 }
 
 export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignupSuccess }) => {
-  const [name, setName] = useState('Abdullah');
-  const [email, setEmail] = useState('abdullah@example.com');
-  const [password, setPassword] = useState('password123');
-  const [confirmPassword, setConfirmPassword] = useState('password123');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{

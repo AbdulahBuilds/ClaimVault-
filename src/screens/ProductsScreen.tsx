@@ -23,6 +23,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
 }) => {
   const {
     filteredProducts,
+    products,
     searchQuery,
     setSearchQuery,
     activeFilter,
@@ -31,6 +32,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
     setSelectedCategory,
     sortBy,
     setSortBy,
+    loadSampleData,
   } = useProducts();
 
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -207,27 +209,41 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
       {/* Products List Content */}
       <div className="p-4 space-y-3 pb-8 flex-1 w-full max-w-full overflow-y-auto no-scrollbar">
         {filteredProducts.length === 0 ? (
-          <EmptyState
-            title="No products found"
-            description={
-              searchQuery || activeFilter !== 'all' || selectedCategory !== 'All'
-                ? "We couldn't find any products matching your current filters. Try resetting search or filter options."
-                : "Add your first purchase and we'll help you keep track of its warranty and return period."
-            }
-            actionLabel="Add Product"
-            onAction={onGoToAdd}
-            secondaryLabel={
-              searchQuery || activeFilter !== 'all' || selectedCategory !== 'All'
-                ? 'Clear Filters'
-                : undefined
-            }
-            onSecondaryAction={() => {
-              setSearchQuery('');
-              setActiveFilter('all');
-              setSelectedCategory('All');
-            }}
-            className="my-6"
-          />
+          <div className="space-y-4">
+            <EmptyState
+              title={products.length === 0 ? "Your vault is empty" : "No products found"}
+              description={
+                searchQuery || activeFilter !== 'all' || selectedCategory !== 'All'
+                  ? "We couldn't find any products matching your current filters. Try resetting search or filter options."
+                  : "Add your first purchase to keep track of its warranty, receipts, and return period."
+              }
+              actionLabel="Add Product"
+              onAction={onGoToAdd}
+              secondaryLabel={
+                searchQuery || activeFilter !== 'all' || selectedCategory !== 'All'
+                  ? 'Clear Filters'
+                  : undefined
+              }
+              onSecondaryAction={() => {
+                setSearchQuery('');
+                setActiveFilter('all');
+                setSelectedCategory('All');
+              }}
+              className="my-4"
+            />
+
+            {products.length === 0 && !searchQuery && activeFilter === 'all' && (
+              <div className="text-center pb-2">
+                <button
+                  type="button"
+                  onClick={loadSampleData}
+                  className="text-xs font-bold text-brand-teal hover:underline py-2 px-4 rounded-xl bg-teal-50 border border-teal-200"
+                >
+                  Load 12 Sample Catalog Items
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           filteredProducts.map((product) => (
             <ProductCard

@@ -5,18 +5,17 @@ import { storageService, STORAGE_KEYS } from './storageService';
 class ProductService {
   private getStoredProducts(): Product[] {
     const products = storageService.getItem<Product[]>(STORAGE_KEYS.PRODUCTS);
-    if (products && Array.isArray(products) && products.length > 0) {
+    if (products !== null && Array.isArray(products)) {
       return products;
     }
     // Check legacy key
     const legacy = storageService.getItem<Product[]>(STORAGE_KEYS.LEGACY_PRODUCTS);
-    if (legacy && Array.isArray(legacy) && legacy.length > 0) {
+    if (legacy !== null && Array.isArray(legacy)) {
       storageService.setItem(STORAGE_KEYS.PRODUCTS, legacy);
       return legacy;
     }
-    // Seed with initial products
-    storageService.setItem(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-    return INITIAL_PRODUCTS;
+    // Clean default for real users: empty vault
+    return [];
   }
 
   private saveProducts(products: Product[]): void {
@@ -70,10 +69,19 @@ class ProductService {
     return true;
   }
 
-  public async resetToDefault(): Promise<Product[]> {
+  public async loadSampleData(): Promise<Product[]> {
     this.saveProducts(INITIAL_PRODUCTS);
     return INITIAL_PRODUCTS;
+  }
+
+  public async resetToDefault(): Promise<Product[]> {
+    return this.loadSampleData();
+  }
+
+  public async clearAll(): Promise<void> {
+    this.saveProducts([]);
   }
 }
 
 export const productService = new ProductService();
+
