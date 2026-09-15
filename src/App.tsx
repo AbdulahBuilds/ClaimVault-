@@ -4,7 +4,6 @@ import { ProductProvider } from './context/ProductContext';
 import { NotificationProvider, useNotifications } from './context/NotificationContext';
 import { ToastProvider } from './context/ToastContext';
 import { MobileDeviceFrame } from './components/ui/MobileDeviceFrame';
-import { StatusBar } from './components/navigation/StatusBar';
 import { BottomTabBar, TabKey } from './components/navigation/BottomTabBar';
 import { PushNotificationBanner } from './components/ui/PushNotificationBanner';
 
