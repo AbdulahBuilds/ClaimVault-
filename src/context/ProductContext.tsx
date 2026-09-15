@@ -3,7 +3,7 @@ import { Product, Reminder, SummaryStats, FilterType, ProductCategory, SortType 
 import { productService } from '../services/productService';
 import { calculateUrgency, getDaysDifference, getNow } from '../utils/dateUtils';
 import { useToast } from './ToastContext';
-
+import { useAuth } from './AuthContext';
 import { storageService, STORAGE_KEYS } from '../services/storageService';
 
 interface ProductContextType {
@@ -33,30 +33,43 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  const userKey = user?.email ? user.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_') : null;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'All'>('All');
   const [sortBy, setSortBy] = useState<SortType>('expiry_asc');
-  const [dismissedReminders, setDismissedReminders] = useState<string[]>(() => {
-    return storageService.getItem<string[]>(STORAGE_KEYS.DISMISSED_REMINDERS, []) || [];
-  });
+  const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   
   const { showToast } = useToast();
+
+  const getRemindersStorageKey = useCallback((key: string | null) => {
+    return key ? `${STORAGE_KEYS.DISMISSED_REMINDERS}_${key}` : STORAGE_KEYS.DISMISSED_REMINDERS;
+  }, []);
 
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await productService.getAll();
+      if (!userKey) {
+        setProducts([]);
+        setDismissedReminders([]);
+        return;
+      }
+      const data = await productService.getAll(userKey);
+      const remindersKey = getRemindersStorageKey(userKey);
+      const savedReminders = storageService.getItem<string[]>(remindersKey, []) || [];
       setProducts(data);
+      setDismissedReminders(savedReminders);
     } catch (e) {
       console.error(e);
       showToast('Failed to load products', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [showToast]);
+  }, [userKey, getRemindersStorageKey, showToast]);
 
   useEffect(() => {
     loadProducts();
@@ -316,7 +329,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   const addProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     setIsLoading(true);
     try {
-      const newProd = await productService.create(productData);
+      const newProd = await productService.create(productData, userKey || undefined);
       setProducts((prev) => [newProd, ...prev]);
       showToast('Product added successfully to ClaimVault!', 'success');
       return newProd;
@@ -330,7 +343,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     try {
-      const updated = await productService.update(id, updates);
+      const updated = await productService.update(id, updates, userKey || undefined);
       setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
       showToast('Product updated successfully', 'success');
       return updated;
@@ -342,7 +355,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const deleteProduct = async (id: string) => {
     try {
-      await productService.delete(id);
+      await productService.delete(id, userKey || undefined);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       showToast('Product removed from vault', 'info');
       return true;
@@ -367,30 +380,33 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         next = [...prev, reminderId];
         showToast('Reminder marked as completed', 'success', 2000);
       }
-      storageService.setItem(STORAGE_KEYS.DISMISSED_REMINDERS, next);
+      const remindersKey = getRemindersStorageKey(userKey);
+      storageService.setItem(remindersKey, next);
       return next;
     });
   };
 
   const restoreDefaults = async () => {
-    const defaults = await productService.resetToDefault();
+    const defaults = await productService.resetToDefault(userKey || undefined);
     setProducts(defaults);
     setDismissedReminders([]);
-    storageService.removeItem(STORAGE_KEYS.DISMISSED_REMINDERS);
+    const remindersKey = getRemindersStorageKey(userKey);
+    storageService.removeItem(remindersKey);
     showToast('Reset sample products to default', 'info');
   };
 
   const loadSampleData = async () => {
-    const samples = await productService.loadSampleData();
+    const samples = await productService.loadSampleData(userKey || undefined);
     setProducts(samples);
     showToast('Loaded 12 sample products into vault', 'success');
   };
 
   const clearAllProducts = async () => {
-    await productService.clearAll();
+    await productService.clearAll(userKey || undefined);
     setProducts([]);
     setDismissedReminders([]);
-    storageService.removeItem(STORAGE_KEYS.DISMISSED_REMINDERS);
+    const remindersKey = getRemindersStorageKey(userKey);
+    storageService.removeItem(remindersKey);
     showToast('Cleared all products from vault', 'info');
   };
 

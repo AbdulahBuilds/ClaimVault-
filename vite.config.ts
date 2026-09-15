@@ -10,9 +10,17 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'clsx', 'tailwind-merge'],
   },
   server: {
     port: 5173,
     host: true,
+    hmr: {
+      clientPort: 5173,
+    },
   },
 });
+

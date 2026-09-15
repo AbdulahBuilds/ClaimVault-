@@ -1,40 +1,51 @@
 import { Product } from '../types';
 import { INITIAL_PRODUCTS } from '../data/mockProducts';
 import { storageService, STORAGE_KEYS } from './storageService';
+import { authService } from './authService';
 
 class ProductService {
-  private getStoredProducts(): Product[] {
-    const products = storageService.getItem<Product[]>(STORAGE_KEYS.PRODUCTS);
+  private getUserKey(explicitKey?: string): string {
+    if (explicitKey) return explicitKey;
+    const currentUser = authService.getUser();
+    if (currentUser && currentUser.email) {
+      return currentUser.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
+    }
+    return 'anonymous';
+  }
+
+  private getStorageKey(userKey?: string): string {
+    const key = this.getUserKey(userKey);
+    return `${STORAGE_KEYS.PRODUCTS}_${key}`;
+  }
+
+  private getStoredProducts(userKey?: string): Product[] {
+    const storageKey = this.getStorageKey(userKey);
+    const products = storageService.getItem<Product[]>(storageKey);
     if (products !== null && Array.isArray(products)) {
       return products;
     }
-    // Check legacy key
-    const legacy = storageService.getItem<Product[]>(STORAGE_KEYS.LEGACY_PRODUCTS);
-    if (legacy !== null && Array.isArray(legacy)) {
-      storageService.setItem(STORAGE_KEYS.PRODUCTS, legacy);
-      return legacy;
-    }
-    // Clean default for real users: empty vault
+    // Clean default for each user account: empty vault
     return [];
   }
 
-  private saveProducts(products: Product[]): void {
-    storageService.setItem(STORAGE_KEYS.PRODUCTS, products);
+  private saveProducts(products: Product[], userKey?: string): void {
+    const storageKey = this.getStorageKey(userKey);
+    storageService.setItem(storageKey, products);
   }
 
-  public async getAll(): Promise<Product[]> {
+  public async getAll(userKey?: string): Promise<Product[]> {
     // Simulated async execution for realism
-    await new Promise((r) => setTimeout(r, 50));
-    return this.getStoredProducts();
+    await new Promise((r) => setTimeout(r, 40));
+    return this.getStoredProducts(userKey);
   }
 
-  public async getById(id: string): Promise<Product | undefined> {
-    const products = this.getStoredProducts();
+  public async getById(id: string, userKey?: string): Promise<Product | undefined> {
+    const products = this.getStoredProducts(userKey);
     return products.find((p) => p.id === id);
   }
 
-  public async create(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
-    const products = this.getStoredProducts();
+  public async create(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>, userKey?: string): Promise<Product> {
+    const products = this.getStoredProducts(userKey);
     const newProduct: Product = {
       ...productData,
       id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -42,12 +53,12 @@ class ProductService {
       updatedAt: new Date().toISOString(),
     };
     const updated = [newProduct, ...products];
-    this.saveProducts(updated);
+    this.saveProducts(updated, userKey);
     return newProduct;
   }
 
-  public async update(id: string, updates: Partial<Product>): Promise<Product> {
-    const products = this.getStoredProducts();
+  public async update(id: string, updates: Partial<Product>, userKey?: string): Promise<Product> {
+    const products = this.getStoredProducts(userKey);
     const index = products.findIndex((p) => p.id === id);
     if (index === -1) {
       throw new Error(`Product with ID ${id} not found`);
@@ -58,30 +69,31 @@ class ProductService {
       updatedAt: new Date().toISOString(),
     };
     products[index] = updatedProduct;
-    this.saveProducts(products);
+    this.saveProducts(products, userKey);
     return updatedProduct;
   }
 
-  public async delete(id: string): Promise<boolean> {
-    const products = this.getStoredProducts();
+  public async delete(id: string, userKey?: string): Promise<boolean> {
+    const products = this.getStoredProducts(userKey);
     const filtered = products.filter((p) => p.id !== id);
-    this.saveProducts(filtered);
+    this.saveProducts(filtered, userKey);
     return true;
   }
 
-  public async loadSampleData(): Promise<Product[]> {
-    this.saveProducts(INITIAL_PRODUCTS);
+  public async loadSampleData(userKey?: string): Promise<Product[]> {
+    this.saveProducts(INITIAL_PRODUCTS, userKey);
     return INITIAL_PRODUCTS;
   }
 
-  public async resetToDefault(): Promise<Product[]> {
-    return this.loadSampleData();
+  public async resetToDefault(userKey?: string): Promise<Product[]> {
+    return this.loadSampleData(userKey);
   }
 
-  public async clearAll(): Promise<void> {
-    this.saveProducts([]);
+  public async clearAll(userKey?: string): Promise<void> {
+    this.saveProducts([], userKey);
   }
 }
 
 export const productService = new ProductService();
+
 
