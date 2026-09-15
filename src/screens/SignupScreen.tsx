@@ -24,6 +24,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
+  const [activeCodeHint, setActiveCodeHint] = useState<string | null>(null);
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [errors, setErrors] = useState<{
@@ -90,10 +91,11 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
 
     setIsLoading(true);
     try {
-      await authService.requestAccountVerificationOtp(email.trim(), name.trim());
+      const res = await authService.requestAccountVerificationOtp(email.trim(), name.trim());
       setIsLoading(false);
       setStep('verify_otp');
       setCountdown(60);
+      setActiveCodeHint(res.code);
       showToast(`Verification code sent via Brevo to ${email}`, 'success');
     } catch {
       setIsLoading(false);
@@ -124,8 +126,9 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
 
     setIsResending(true);
     try {
-      await authService.requestAccountVerificationOtp(email.trim(), name.trim());
+      const res = await authService.requestAccountVerificationOtp(email.trim(), name.trim());
       setCountdown(60);
+      setActiveCodeHint(res.code);
       showToast('New verification code sent to your email', 'success');
     } catch {
       showToast('Failed to resend code', 'error');
@@ -315,6 +318,27 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
             </div>
 
             <form onSubmit={handleConfirmVerificationAndCreate} className="space-y-5 pt-2">
+              {/* Instant OTP Helper & Security Banner */}
+              {activeCodeHint && (
+                <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3 text-left shadow-xs">
+                  <div className="space-y-0.5">
+                    <div className="text-[10px] uppercase font-extrabold text-amber-800 tracking-wider">
+                      Live Verification Code
+                    </div>
+                    <div className="text-sm font-black font-mono text-amber-950 tracking-wider">
+                      {activeCodeHint}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOtpDigits(activeCodeHint.split(''))}
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold transition shrink-0"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-brand-navy block text-center">
                   Enter 6-Digit Code

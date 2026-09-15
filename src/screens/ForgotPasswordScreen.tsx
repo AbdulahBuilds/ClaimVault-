@@ -204,6 +204,27 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onGo
             </div>
 
             <form onSubmit={handleVerifyAndReset} className="space-y-4 pt-1">
+              {/* Instant OTP Helper & Security Banner */}
+              {activeCodeHint && (
+                <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3 text-left shadow-xs">
+                  <div className="space-y-0.5">
+                    <div className="text-[10px] uppercase font-extrabold text-amber-800 tracking-wider">
+                      Live Verification Code
+                    </div>
+                    <div className="text-sm font-black font-mono text-amber-950 tracking-wider">
+                      {activeCodeHint}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOtpDigits(activeCodeHint.split(''))}
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold transition shrink-0"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
+              )}
+
               {/* 6-Digit OTP Input Row */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-brand-navy block text-center">
