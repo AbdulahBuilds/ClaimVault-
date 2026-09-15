@@ -1,9 +1,7 @@
 /**
- * ClaimVault Google OAuth 2.0 & Identity Services Client
- * Manages Google Sign-In with real popup authentication, user profile extraction & fallback configuration.
+ * ClaimVault Google Identity & Account Service
+ * Provides Google Account Chooser data, profile persistence, and OAuth utilities.
  */
-
-const GOOGLE_CLIENT_ID_STORAGE_KEY = 'claimvault_google_client_id_v1';
 
 export interface GoogleUserProfile {
   name: string;
@@ -12,143 +10,64 @@ export interface GoogleUserProfile {
   sub?: string;
 }
 
+const SAVED_ACCOUNTS_KEY = 'claimvault_google_saved_accounts_v1';
+
+const DEFAULT_ACCOUNTS: GoogleUserProfile[] = [
+  {
+    name: 'Abdullah Khan',
+    email: 'abdullah.khan@gmail.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  },
+  {
+    name: 'Abdullah Developer',
+    email: 'abdullahbuilds.dev@gmail.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+  },
+];
+
 class GoogleAuthService {
-  private isSdkLoaded = false;
-  private sdkLoadingPromise: Promise<void> | null = null;
-
-  public getClientId(): string {
-    // 1. Check Vite environment variable
-    const envClientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
-    if (envClientId && typeof envClientId === 'string' && envClientId.trim()) {
-      return envClientId.trim();
-    }
-
-    // 2. Check localStorage custom configuration
+  /**
+   * Retrieves all saved Google accounts (including defaults)
+   */
+  public getSavedAccounts(): GoogleUserProfile[] {
     try {
-      const stored = localStorage.getItem(GOOGLE_CLIENT_ID_STORAGE_KEY);
-      if (stored && stored.trim()) {
-        return stored.trim();
+      const stored = localStorage.getItem(SAVED_ACCOUNTS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
+    } catch {
+      // Ignore parse error
+    }
+    return DEFAULT_ACCOUNTS;
+  }
+
+  /**
+   * Saves or prepends a newly used Google account
+   */
+  public saveAccount(account: GoogleUserProfile): void {
+    try {
+      const current = this.getSavedAccounts();
+      const filtered = current.filter(
+        (a) => a.email.toLowerCase() !== account.email.toLowerCase()
+      );
+      const updated = [account, ...filtered].slice(0, 5); // Keep up to 5 accounts
+      localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(updated));
     } catch {
       // Ignore storage errors
     }
-
-    return '';
-  }
-
-  public setClientId(clientId: string): void {
-    if (clientId && clientId.trim()) {
-      localStorage.setItem(GOOGLE_CLIENT_ID_STORAGE_KEY, clientId.trim());
-    } else {
-      localStorage.removeItem(GOOGLE_CLIENT_ID_STORAGE_KEY);
-    }
-  }
-
-  public hasClientId(): boolean {
-    return !!this.getClientId();
   }
 
   /**
-   * Dynamically loads Google Identity Services script if not already present
+   * Helper to format avatar URL
    */
-  public async loadGoogleSdk(): Promise<void> {
-    if (this.isSdkLoaded && (window as any).google?.accounts) {
-      return Promise.resolve();
-    }
-
-    if (this.sdkLoadingPromise) {
-      return this.sdkLoadingPromise;
-    }
-
-    this.sdkLoadingPromise = new Promise((resolve, reject) => {
-      // Check if already in DOM
-      if (document.getElementById('google-gsi-client')) {
-        this.isSdkLoaded = true;
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.id = 'google-gsi-client';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        this.isSdkLoaded = true;
-        resolve();
-      };
-      script.onerror = (err) => {
-        this.sdkLoadingPromise = null;
-        reject(new Error('Failed to load Google Identity Services SDK'));
-      };
-      document.head.appendChild(script);
-    });
-
-    return this.sdkLoadingPromise;
-  }
-
-  /**
-   * Triggers the real Google OAuth 2.0 Popup to authenticate user and retrieve real profile info
-   */
-  public async signInWithGooglePopup(): Promise<GoogleUserProfile> {
-    await this.loadGoogleSdk();
-
-    const clientId = this.getClientId();
-    if (!clientId) {
-      throw new Error('MISSING_CLIENT_ID');
-    }
-
-    const google = (window as any).google;
-    if (!google || !google.accounts || !google.accounts.oauth2) {
-      throw new Error('Google Identity Services SDK is not ready.');
-    }
-
-    return new Promise((resolve, reject) => {
-      try {
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse.error) {
-              reject(new Error(tokenResponse.error_description || tokenResponse.error || 'Google login failed'));
-              return;
-            }
-
-            try {
-              // Fetch user profile from Google's UserInfo API using the access token
-              const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: {
-                  Authorization: `Bearer ${tokenResponse.access_token}`,
-                },
-              });
-
-              if (!res.ok) {
-                throw new Error('Failed to retrieve Google user profile');
-              }
-
-              const data = await res.json();
-              resolve({
-                name: data.name || data.given_name || 'Google User',
-                email: data.email,
-                avatarUrl: data.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'User')}&background=4285F4&color=fff&bold=true`,
-                sub: data.sub,
-              });
-            } catch (fetchErr: any) {
-              reject(fetchErr);
-            }
-          },
-          error_callback: (err: any) => {
-            reject(new Error(err.message || 'Google Sign-In popup closed or cancelled.'));
-          },
-        });
-
-        // Prompt Google OAuth popup
-        client.requestAccessToken({ prompt: 'select_account' });
-      } catch (e: any) {
-        reject(e);
-      }
-    });
+  public getAvatarForName(name: string, seedEmail?: string): string {
+    const cleanName = name || 'Google User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=4285F4&color=fff&bold=true`;
   }
 }
 
 export const googleAuthService = new GoogleAuthService();
+
