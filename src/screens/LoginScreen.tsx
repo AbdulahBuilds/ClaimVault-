@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
-import { googleAuthService } from '../services/googleAuthService';
+import { googleAuthService, GoogleUserProfile } from '../services/googleAuthService';
 import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface LoginScreenProps {
@@ -24,9 +24,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
   const { login, loginWithGoogle } = useAuth();
   const { showToast } = useToast();
+
+  const handleGoogleSuccess = async (googleUser: GoogleUserProfile) => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle(googleUser);
+      showToast(`Welcome back, ${googleUser.name}!`, 'success');
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+    } catch {
+      showToast('Google login failed', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Automatically initialize In-App Google One Tap
+    googleAuthService.initOneTap(handleGoogleSuccess).catch(() => {});
+  }, []);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
