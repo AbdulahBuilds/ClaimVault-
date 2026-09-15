@@ -31,13 +31,20 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   if (isDashboard) {
     return (
       <div className={`w-full px-5 pt-3 pb-4 bg-brand-bg flex items-center justify-between border-b border-brand-border/60 shrink-0 ${className}`}>
-        <div>
-          <h1 className="text-xl font-extrabold text-brand-navy tracking-tight">
-            Good morning, {userName}
-          </h1>
-          <p className="text-xs font-medium text-brand-muted mt-0.5">
-            Keep your purchases protected.
-          </p>
+        <div className="flex items-center gap-3">
+          <img
+            src="/claimvault-logo.png"
+            alt="ClaimVault"
+            className="w-10 h-10 object-contain rounded-xl shadow-sm border border-slate-200/80 shrink-0 bg-white"
+          />
+          <div>
+            <h1 className="text-lg font-extrabold text-brand-navy tracking-tight leading-tight">
+              Good morning, {userName}
+            </h1>
+            <p className="text-[11px] font-medium text-brand-muted mt-0.5">
+              Keep your purchases protected.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

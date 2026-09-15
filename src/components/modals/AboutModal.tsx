@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShieldCheck, Sparkles, Heart, ExternalLink, Code2 } from 'lucide-react';
 import { THEME } from '../../constants/theme';
+import { ClaimVaultLogo } from '../ui/ClaimVaultLogo';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -32,9 +33,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
           {/* Logo & Brand */}
           <div className="flex flex-col items-center -mt-2 mb-4">
-            <div className="w-16 h-16 rounded-3xl bg-brand-navy text-white flex items-center justify-center mb-3 shadow-card border-2 border-brand-teal">
-              <ShieldCheck className="w-9 h-9 text-brand-teal-light" />
-            </div>
+            <ClaimVaultLogo size="lg" className="mb-2" />
 
             <h3 className="text-lg font-extrabold text-brand-navy tracking-tight">
               {THEME.app.name}

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
 import { GoogleAuthModal, GoogleAccount } from '../components/modals/GoogleAuthModal';
+import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface SignupScreenProps {
   onGoToLogin: () => void;
@@ -98,13 +99,16 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
           <span>Back to Login</span>
         </button>
 
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-brand-navy tracking-tight">
-            Create Account
-          </h1>
-          <p className="text-xs font-medium text-brand-muted">
-            Start protecting your purchases, receipts & warranties
-          </p>
+        <div className="flex flex-col items-center text-center space-y-2 pt-1">
+          <ClaimVaultLogo size="md" />
+          <div className="space-y-1">
+            <h1 className="text-2xl font-extrabold text-brand-navy tracking-tight">
+              Create Account
+            </h1>
+            <p className="text-xs font-medium text-brand-muted">
+              Start protecting your purchases, receipts & warranties
+            </p>
+          </div>
         </div>
 
         {/* Continue with Google Button on Signup */}

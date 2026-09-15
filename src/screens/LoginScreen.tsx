@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
 import { GoogleAuthModal, GoogleAccount } from '../components/modals/GoogleAuthModal';
+import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface LoginScreenProps {
   onGoToSignup: () => void;
@@ -94,16 +95,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     <div className="h-full flex flex-col justify-between p-6 bg-white overflow-y-auto">
       <div className="space-y-6 pt-2">
         {/* Brand Header */}
-        <div className="space-y-2 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-brand-navy text-white flex items-center justify-center mx-auto shadow-sm">
-            <ShieldCheck className="w-7 h-7 text-brand-teal-light" />
+        <div className="space-y-3 text-center flex flex-col items-center">
+          <ClaimVaultLogo size="lg" className="mx-auto" />
+          <div>
+            <h1 className="text-2xl font-extrabold text-brand-navy tracking-tight">
+              Welcome to {THEME.app.name}
+            </h1>
+            <p className="text-xs font-medium text-brand-muted mt-1">
+              Sign in to access your purchases and warranties
+            </p>
           </div>
-          <h1 className="text-2xl font-extrabold text-brand-navy tracking-tight">
-            Welcome to {THEME.app.name}
-          </h1>
-          <p className="text-xs font-medium text-brand-muted">
-            Sign in to access your purchases and warranties
-          </p>
         </div>
 
         {/* Form */}

@@ -1,22 +1,24 @@
 /**
- * ClaimVault PWA Service Worker (v1.0.2)
- * High-performance offline caching with strict MIME isolation.
+ * ClaimVault PWA Service Worker (v1.0.3)
+ * High-performance offline caching with strict development isolation.
  */
 
-const CACHE_NAME = 'claimvault-v1.0.2';
+const CACHE_NAME = 'claimvault-v1.0.3';
 const STATIC_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
+  '/claimvault-logo.png',
+  '/logo.png',
 ];
 
 // Install: Cache static app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_SHELL);
+      return cache.addAll(STATIC_SHELL).catch((err) => {
+        console.warn('[SW] Cache shell addAll warning:', err);
+      });
     })
   );
   self.skipWaiting();
@@ -42,12 +44,29 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // 1. Ignore non-GET and backend API requests
-  if (request.method !== 'GET' || request.url.includes('/api/')) {
+  // 1. Never intercept non-GET requests
+  if (request.method !== 'GET') {
     return;
   }
 
-  // 2. HTML Navigation requests: Network-first, fallback to cached index.html
+  const url = new URL(request.url);
+
+  // 2. Strict development & API bypass:
+  // Never intercept localhost, Vite internal modules, HMR, or backend APIs
+  if (
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/api/') ||
+    url.search.includes('t=') ||
+    url.search.includes('import')
+  ) {
+    return;
+  }
+
+  // 3. HTML Navigation requests: Network-first, fallback to cached index.html
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -65,26 +84,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static assets (JS, CSS, images, icons, fonts): Cache-first with background network refresh
+  // 4. Static assets (JS, CSS, images, fonts): Cache-first with background network refresh
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
 
-      return fetch(request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+      return fetch(request)
+        .then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+            return networkResponse;
+          }
+
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+
           return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseToCache);
+        })
+        .catch((err) => {
+          // If network fetch fails, return null or let browser handle it rather than rejecting
+          console.warn('[SW] Fetch failed for:', request.url, err);
+          return new Response('Network error occurred', { status: 408, headers: { 'Content-Type': 'text/plain' } });
         });
-
-        return networkResponse;
-      });
-      // NOTE: Do NOT return index.html fallback for script/style assets to prevent MIME type mismatch
     })
   );
 });

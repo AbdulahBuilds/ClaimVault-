@@ -336,9 +336,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
               className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-slate-100 text-brand-navy flex items-center justify-center">
-                  <Info className="w-4 h-4" />
-                </div>
+                <img
+                  src="/claimvault-logo.png"
+                  alt="ClaimVault"
+                  className="w-8 h-8 object-contain rounded-xl border border-slate-200 bg-white"
+                />
                 <div>
                   <p className="text-xs font-bold text-brand-navy">About {THEME.app.name}</p>
                   <p className="text-[11px] text-brand-muted">Version 1.0.0 (Production Mobile Build)</p>

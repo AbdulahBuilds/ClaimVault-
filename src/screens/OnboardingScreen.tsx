@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Receipt, BellRing, ArrowRight, Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { THEME } from '../constants/theme';
+import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -22,8 +23,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, 
       visual: (
         <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
           <div className="absolute inset-0 bg-brand-teal/10 rounded-full animate-pulse" />
-          <div className="w-36 h-36 rounded-3xl bg-brand-navy text-white flex items-center justify-center shadow-float border border-brand-teal/30">
-            <ShieldCheck className="w-16 h-16 text-brand-teal-light" />
+          <div className="w-36 h-36 rounded-3xl bg-white text-white flex items-center justify-center shadow-float border border-brand-teal/30 p-4">
+            <img
+              src="/claimvault-logo.png"
+              alt="ClaimVault"
+              className="w-full h-full object-contain rounded-2xl"
+            />
           </div>
           <div className="absolute -bottom-2 -right-2 bg-white px-3 py-1.5 rounded-xl border border-brand-border shadow-card flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-brand-green" />
@@ -90,14 +95,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, 
     <div className="h-full flex flex-col justify-between p-6 bg-white select-none">
       {/* Top Header */}
       <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-xl bg-brand-teal text-white flex items-center justify-center">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <span className="font-extrabold text-sm text-brand-navy tracking-tight">
-            {THEME.app.name}
-          </span>
-        </div>
+        <ClaimVaultLogo size="sm" withText />
 
         {!isLast && (
           <button

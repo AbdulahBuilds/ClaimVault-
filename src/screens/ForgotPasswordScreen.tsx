@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../context/ToastContext';
+import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface ForgotPasswordScreenProps {
   onGoToLogin: () => void;
@@ -27,7 +28,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onGo
 
   return (
     <div className="h-full flex flex-col justify-between p-6 bg-white">
-      <div className="space-y-6 pt-2">
+      <div className="space-y-5 pt-2">
         <button
           type="button"
           onClick={onGoToLogin}
@@ -51,14 +52,17 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onGo
             </Button>
           </div>
         ) : (
-          <div className="space-y-5">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-extrabold text-brand-navy tracking-tight">
-                Reset Password
-              </h1>
-              <p className="text-xs font-medium text-brand-muted">
-                Enter your email and we'll send you recovery instructions
-              </p>
+          <div className="space-y-4">
+            <div className="flex flex-col items-center text-center space-y-2 pt-1">
+              <ClaimVaultLogo size="md" />
+              <div className="space-y-1">
+                <h1 className="text-2xl font-extrabold text-brand-navy tracking-tight">
+                  Reset Password
+                </h1>
+                <p className="text-xs font-medium text-brand-muted">
+                  Enter your email and we'll send you recovery instructions
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
