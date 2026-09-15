@@ -10,8 +10,8 @@ export interface SendEmailResult {
   error?: string;
 }
 
-const DEFAULT_SENDER_EMAIL = 'support@claimvault.app';
-const DEFAULT_SENDER_NAME = 'ClaimVault Security';
+const DEFAULT_SENDER_EMAIL = 'abdullahak071@gmail.com';
+const DEFAULT_SENDER_NAME = 'ClaimVault';
 
 class EmailService {
   public getApiKey(): string {
