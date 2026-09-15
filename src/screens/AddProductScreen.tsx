@@ -246,20 +246,20 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
         )}
 
         {/* Hero AI Scanner Trigger Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-brand-navy to-slate-900 border border-teal-500/30 shadow-float p-4 sm:p-5 text-white">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-brand-navy to-slate-900 border border-amber-500/30 shadow-float p-4 sm:p-5 text-white">
           {/* Ambient glowing radial lights */}
-          <div className="absolute top-0 right-0 w-36 h-36 bg-brand-teal/25 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-28 h-28 bg-sky-600/20 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-28 h-28 bg-brand-navy/60 rounded-full blur-xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col gap-3.5">
             {/* Top Tag & Pulsing Indicator */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-teal/20 border border-teal-400/40 text-teal-300 text-[10px] font-extrabold tracking-wider uppercase">
-                <Sparkles className="w-3 h-3 text-teal-300 animate-pulse" />
-                <span>AI Neural Scanner</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-extrabold tracking-wider uppercase">
+                <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
+                <span>AI Receipt Scanner</span>
               </div>
-              <span className="text-[10px] font-bold text-teal-200 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded-md backdrop-blur-sm">
-                ⚡ 1-Tap Autofill
+              <span className="text-[10px] font-extrabold text-white bg-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
+                Coming Soon
               </span>
             </div>
 
@@ -269,20 +269,20 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
                 Scan Receipt to Auto-Fill
               </h3>
               <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                Capture any store bill, cash receipt or invoice. Neural OCR extracts name, price, store & warranty dates instantly.
+                Neural Vision AI receipt & invoice scanning is currently in active development. Please fill in the product details below.
               </p>
             </div>
 
             {/* Feature Highlights Pills */}
             <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-200">
               <span className="bg-slate-800/80 border border-slate-700/80 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <Check className="w-2.5 h-2.5 text-teal-400" /> 10+ Fields
+                <Check className="w-2.5 h-2.5 text-amber-400" /> Neural Vision OCR
               </span>
               <span className="bg-slate-800/80 border border-slate-700/80 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <Check className="w-2.5 h-2.5 text-teal-400" /> 99.4% OCR
+                <Check className="w-2.5 h-2.5 text-amber-400" /> Auto Deadlines
               </span>
               <span className="bg-slate-800/80 border border-slate-700/80 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <Check className="w-2.5 h-2.5 text-teal-400" /> PK Invoices
+                <Check className="w-2.5 h-2.5 text-amber-400" /> Coming Soon
               </span>
             </div>
 
@@ -291,12 +291,13 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
               type="button"
               onClick={() => {
                 triggerHaptic('medium');
+                showToast('AI Receipt Scanner is coming soon! Please enter details manually below.', 'info');
                 onOpenAIScanner();
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-teal via-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-bold text-xs shadow-lg shadow-teal-950/50 flex items-center justify-center gap-2 transition active:scale-[0.98] border border-teal-400/40"
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-950/40 flex items-center justify-center gap-2 transition active:scale-[0.98] border border-amber-400/40"
             >
               <Camera className="w-4 h-4 text-white shrink-0" />
-              <span>Launch AI Receipt Scanner</span>
+              <span>Scan Receipt with AI (Coming Soon)</span>
               <ArrowRight className="w-3.5 h-3.5 text-white/80 shrink-0" />
             </button>
           </div>

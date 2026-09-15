@@ -244,6 +244,11 @@ const AppNavigator: React.FC = () => {
         <AIScannerModal
           isOpen={isAIScannerOpen}
           onClose={() => setIsAIScannerOpen(false)}
+          onEnterManually={() => {
+            setIsAIScannerOpen(false);
+            setActiveTab('add');
+            setCurrentView('main');
+          }}
           onProductCreated={(newId) => {
             setIsAIScannerOpen(false);
             handleSelectProduct(newId);

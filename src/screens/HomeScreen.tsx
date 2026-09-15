@@ -15,6 +15,7 @@ import { Badge, CategoryBadge, AIComingSoonBadge } from '../components/ui/Badge'
 import { MobileHeader } from '../components/navigation/MobileHeader';
 import { ProductCard } from '../components/cards/ProductCard';
 import { triggerHaptic } from '../utils/haptics';
+import { useToast } from '../context/ToastContext';
 
 interface HomeScreenProps {
   onSelectProduct: (productId: string) => void;
@@ -35,6 +36,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 }) => {
   const { products, stats, setActiveFilter, loadSampleData } = useProducts();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const now = getNow();
 
   // Find products expiring soon (warranty or return within 30 days)
@@ -163,25 +165,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         {/* AI Scanner Banner / Quick Action */}
         <div 
-          onClick={onOpenAIScanner}
-          className="p-4 rounded-2xl bg-gradient-to-r from-brand-navy via-slate-800 to-brand-navy text-white shadow-card flex items-center justify-between cursor-pointer hover:shadow-card-hover transition active:scale-[0.99] border border-brand-teal/40 relative overflow-hidden group"
+          onClick={() => {
+            triggerHaptic('light');
+            showToast('AI Receipt Scanner is coming soon! You can enter product details manually.', 'info');
+            onOpenAIScanner();
+          }}
+          className="p-4 rounded-2xl bg-gradient-to-r from-brand-navy via-slate-800 to-brand-navy text-white shadow-card flex items-center justify-between cursor-pointer hover:shadow-card-hover transition active:scale-[0.99] border border-amber-500/30 relative overflow-hidden group"
         >
-          <div className="absolute top-0 right-0 w-28 h-28 bg-brand-teal/20 rounded-full blur-xl pointer-events-none group-hover:bg-brand-teal/30 transition" />
+          <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/20 transition" />
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-10 h-10 rounded-xl bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-brand-teal-light group-hover:scale-105 transition">
-              <Sparkles className="w-5 h-5 text-brand-teal-light animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 group-hover:scale-105 transition">
+              <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xs font-bold text-white">Scan Receipt with AI</h3>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-brand-teal text-white px-2 py-0.5 rounded-md shadow-sm">
-                  Instant OCR
+                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                  Coming Soon
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 mt-0.5">Auto-extract items, warranty & return policies</p>
+              <p className="text-[11px] text-slate-300 mt-0.5">Neural OCR invoice & receipt scanning in development</p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-brand-teal-light relative z-10 group-hover:translate-x-0.5 transition" />
+          <ChevronRight className="w-5 h-5 text-amber-300 relative z-10 group-hover:translate-x-0.5 transition" />
         </div>
 
         {/* If Products Empty: Show Welcome & Quick Action Card */}
