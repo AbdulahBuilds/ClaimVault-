@@ -11,7 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password?: string) => Promise<void>;
   signup: (name: string, email: string, password?: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (googleUser?: { name?: string; email?: string; avatarUrl?: string }) => Promise<void>;
   logout: () => Promise<void>;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
@@ -53,10 +53,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (googleUser?: { name?: string; email?: string; avatarUrl?: string }) => {
     setIsLoading(true);
     try {
-      const user = await authService.login('abdullah.google@gmail.com');
+      const user = await authService.loginWithGoogle(googleUser);
       setUser(user);
     } finally {
       setIsLoading(false);

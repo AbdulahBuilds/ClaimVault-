@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
+import { GoogleAuthModal, GoogleAccount } from '../components/modals/GoogleAuthModal';
 
 interface LoginScreenProps {
   onGoToSignup: () => void;
@@ -21,6 +22,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const { login, loginWithGoogle } = useAuth();
@@ -73,11 +75,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleSelectGoogleAccount = async (account: GoogleAccount) => {
     setIsLoading(true);
     try {
-      await loginWithGoogle();
-      showToast('Signed in with Google', 'success');
+      await loginWithGoogle(account);
+      showToast(`Signed in as ${account.name} with Google`, 'success');
       if (onLoginSuccess) {
         onLoginSuccess();
       }
@@ -173,7 +175,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="space-y-2.5">
           <button
             type="button"
-            onClick={handleGoogleLogin}
+            onClick={() => setIsGoogleModalOpen(true)}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-brand-border hover:bg-slate-50 transition active:scale-[0.98] text-xs font-bold text-brand-navy"
           >
@@ -222,6 +224,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </button>
         </p>
       </div>
+
+      {/* Google Account Chooser Modal */}
+      <GoogleAuthModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSelectAccount={handleSelectGoogleAccount}
+      />
     </div>
   );
 };

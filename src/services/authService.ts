@@ -67,6 +67,28 @@ class AuthService {
     return user;
   }
 
+  public async loginWithGoogle(googleUser?: { name?: string; email?: string; avatarUrl?: string }): Promise<UserProfile> {
+    await new Promise((r) => setTimeout(r, 200));
+    const finalEmail = (googleUser?.email || 'abdullah.khan@gmail.com').trim().toLowerCase();
+    const finalName = (googleUser?.name || 'Abdullah Khan').trim();
+    const finalAvatar = googleUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName)}&background=4285F4&color=fff&bold=true`;
+
+    const existing = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
+    const user: UserProfile = {
+      id: existing?.id || `user-google-${Date.now()}`,
+      name: finalName,
+      email: finalEmail,
+      avatarUrl: finalAvatar,
+      currency: existing?.currency || 'PKR',
+      isPro: true,
+      memberSince: existing?.memberSince || 'September 2026',
+      notificationsEnabled: true,
+      reminderLeadTimes: [30, 14, 7, 1],
+    };
+    storageService.setItem(STORAGE_KEYS.USER, user);
+    return user;
+  }
+
   public async logout(): Promise<void> {
     await new Promise((r) => setTimeout(r, 100));
     storageService.removeItem(STORAGE_KEYS.USER);
