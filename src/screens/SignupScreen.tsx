@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
-import { googleAuthService, GoogleUserProfile } from '../services/googleAuthService';
+import { GoogleAuthModal, GoogleAccount } from '../components/modals/GoogleAuthModal';
 import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface SignupScreenProps {
@@ -20,6 +20,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
@@ -30,11 +31,11 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
   const { signup, loginWithGoogle } = useAuth();
   const { showToast } = useToast();
 
-  const handleGoogleSuccess = async (googleUser: GoogleUserProfile) => {
+  const handleSelectGoogleAccount = async (account: GoogleAccount) => {
     setIsLoading(true);
     try {
-      await loginWithGoogle(googleUser);
-      showToast(`Welcome to ${THEME.app.name}, ${googleUser.name}!`, 'success');
+      await loginWithGoogle(account);
+      showToast(`Welcome to ${THEME.app.name}, ${account.name}!`, 'success');
       if (onSignupSuccess) {
         onSignupSuccess();
       }
@@ -44,11 +45,6 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    // Automatically initialize In-App Google One Tap
-    googleAuthService.initOneTap(handleGoogleSuccess).catch(() => {});
-  }, []);
 
   const validate = () => {
     const newErrors: {
@@ -91,24 +87,6 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    setIsLoading(true);
-    try {
-      const googleUser = await googleAuthService.signInWithGoogle();
-      await loginWithGoogle(googleUser);
-      showToast(`Welcome to ${THEME.app.name}, ${googleUser.name}!`, 'success');
-      if (onSignupSuccess) {
-        onSignupSuccess();
-      }
-    } catch (err: any) {
-      if (err.message && !err.message.includes('closed') && !err.message.includes('cancelled')) {
-        showToast(err.message || 'Google sign up failed', 'error');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="h-full flex flex-col justify-between p-6 bg-white overflow-y-auto">
       <div className="space-y-4 pt-2">
@@ -136,7 +114,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
         {/* Continue with Google Button on Signup */}
         <button
           type="button"
-          onClick={handleGoogleSignUp}
+          onClick={() => setIsGoogleModalOpen(true)}
           disabled={isLoading}
           className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-brand-border hover:bg-slate-50 transition active:scale-[0.98] text-xs font-bold text-brand-navy shadow-sm"
         >
@@ -253,6 +231,13 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
           </button>
         </p>
       </div>
+
+      {/* In-App Google Account Chooser Modal */}
+      <GoogleAuthModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSelectAccount={handleSelectGoogleAccount}
+      />
     </div>
   );
 };

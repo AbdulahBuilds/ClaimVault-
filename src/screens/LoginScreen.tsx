@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { THEME } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
-import { googleAuthService, GoogleUserProfile } from '../services/googleAuthService';
+import { GoogleAuthModal, GoogleAccount } from '../components/modals/GoogleAuthModal';
 import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 interface LoginScreenProps {
@@ -23,31 +23,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
   const { login, loginWithGoogle } = useAuth();
   const { showToast } = useToast();
 
-  const handleGoogleSuccess = async (googleUser: GoogleUserProfile) => {
+  const handleSelectGoogleAccount = async (account: GoogleAccount) => {
     setIsLoading(true);
     try {
-      await loginWithGoogle(googleUser);
-      showToast(`Welcome back, ${googleUser.name}!`, 'success');
+      await loginWithGoogle(account);
+      showToast(`Signed in as ${account.name} with Google`, 'success');
       if (onLoginSuccess) {
         onLoginSuccess();
       }
     } catch {
-      showToast('Google login failed', 'error');
+      showToast('Google sign-in failed', 'error');
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    // Automatically initialize In-App Google One Tap
-    googleAuthService.initOneTap(handleGoogleSuccess).catch(() => {});
-  }, []);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -91,24 +86,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       }
     } catch {
       showToast('Demo sign in failed', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      const googleUser = await googleAuthService.signInWithGoogle();
-      await loginWithGoogle(googleUser);
-      showToast(`Signed in as ${googleUser.name} with Google`, 'success');
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
-    } catch (err: any) {
-      if (err.message && !err.message.includes('closed') && !err.message.includes('cancelled')) {
-        showToast(err.message || 'Google Sign-In failed', 'error');
-      }
     } finally {
       setIsLoading(false);
     }
@@ -199,7 +176,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="space-y-2.5">
           <button
             type="button"
-            onClick={handleGoogleSignIn}
+            onClick={() => setIsGoogleModalOpen(true)}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-brand-border hover:bg-slate-50 transition active:scale-[0.98] text-xs font-bold text-brand-navy"
           >
@@ -248,6 +225,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </button>
         </p>
       </div>
+
+      {/* In-App Google Account Chooser Modal */}
+      <GoogleAuthModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSelectAccount={handleSelectGoogleAccount}
+      />
     </div>
   );
 };
