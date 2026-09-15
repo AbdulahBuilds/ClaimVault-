@@ -10,8 +10,22 @@ interface StoredOtp {
 }
 
 const OTP_STORAGE_KEY = 'claimvault_auth_otps_v1';
+const CREDENTIALS_STORAGE_KEY = 'claimvault_auth_credentials_v1';
 
 class AuthService {
+  /**
+   * Retrieves all registered email-password credentials
+   */
+  private getCredentials(): Record<string, string> {
+    return storageService.getItem<Record<string, string>>(CREDENTIALS_STORAGE_KEY) || {
+      'demo@claimvault.com': 'password123',
+    };
+  }
+
+  private saveCredentials(creds: Record<string, string>): void {
+    storageService.setItem(CREDENTIALS_STORAGE_KEY, creds);
+  }
+
   public getUser(): UserProfile | null {
     const user = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
     if (user && user.email) {
@@ -35,9 +49,22 @@ class AuthService {
     storageService.setItem(STORAGE_KEYS.ONBOARDING, completed);
   }
 
-  public async login(email: string, _password?: string): Promise<UserProfile> {
+  public async login(email: string, password?: string): Promise<UserProfile> {
     await new Promise((r) => setTimeout(r, 200));
     const trimmedEmail = email.trim().toLowerCase();
+    const creds = this.getCredentials();
+
+    // Verify password if account exists in credentials database
+    if (creds[trimmedEmail] && password) {
+      if (creds[trimmedEmail] !== password) {
+        throw new Error('Incorrect password. Please try again or use Forgot Password.');
+      }
+    } else if (password) {
+      // First-time or demo login - register password
+      creds[trimmedEmail] = password;
+      this.saveCredentials(creds);
+    }
+
     const rawName = trimmedEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ') || 'User';
     const capitalizedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
@@ -57,10 +84,18 @@ class AuthService {
     return user;
   }
 
-  public async signup(name: string, email: string, _password?: string): Promise<UserProfile> {
+  public async signup(name: string, email: string, password?: string): Promise<UserProfile> {
     await new Promise((r) => setTimeout(r, 200));
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim() || 'User';
+
+    // Persist password in credentials store
+    if (password) {
+      const creds = this.getCredentials();
+      creds[trimmedEmail] = password;
+      this.saveCredentials(creds);
+    }
+
     const user: UserProfile = {
       id: `user-${Date.now()}`,
       name: trimmedName,
@@ -166,18 +201,29 @@ class AuthService {
   }
 
   /**
-   * Resets and updates the account password
+   * Resets and updates the account password in the persistent credentials database
    */
-  public async completePasswordReset(email: string, _newPassword: string): Promise<boolean> {
+  public async completePasswordReset(email: string, newPassword: string): Promise<boolean> {
     await new Promise((r) => setTimeout(r, 300));
     const trimmed = email.trim().toLowerCase();
 
-    // Clear used OTPs
+    // 1. Update persistent credentials database with the new password
+    const creds = this.getCredentials();
+    creds[trimmed] = newPassword;
+    this.saveCredentials(creds);
+
+    // 2. Clear used OTPs
     const otps: StoredOtp[] = storageService.getItem<StoredOtp[]>(OTP_STORAGE_KEY) || [];
     const remaining = otps.filter(
       (o) => !(o.email === trimmed && o.type === 'password_reset')
     );
     storageService.setItem(OTP_STORAGE_KEY, remaining);
+
+    // 3. Update active user profile if currently signed in with this email
+    const current = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
+    if (current && current.email?.toLowerCase() === trimmed) {
+      storageService.setItem(STORAGE_KEYS.USER, current);
+    }
 
     return true;
   }

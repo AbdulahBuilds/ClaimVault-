@@ -69,8 +69,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-    } catch {
-      showToast('Failed to sign in', 'error');
+    } catch (err: any) {
+      showToast(err.message || 'Incorrect password or email. Please check your credentials.', 'error');
     } finally {
       setIsLoading(false);
     }
