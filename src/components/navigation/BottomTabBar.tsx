@@ -29,7 +29,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onSelectT
   ];
 
   return (
-    <div className="w-full bg-white border-t border-brand-border px-3 py-2 shrink-0 z-40 shadow-card">
+    <nav className="w-full bg-white/95 backdrop-blur-md border-t border-brand-border/80 px-2 pt-1.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] shrink-0 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
       <div className="flex items-center justify-around max-w-md mx-auto relative">
         {tabs.map((tab) => {
           const isAdd = tab.key === 'add';
@@ -40,19 +40,20 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onSelectT
             return (
               <button
                 key={tab.key}
+                type="button"
                 onClick={() => handleTabSelect(tab.key)}
-                className="relative -top-5 flex flex-col items-center group focus:outline-none"
+                className="relative -top-3.5 flex flex-col items-center group focus:outline-none"
                 aria-label="Add Product"
               >
                 <div
-                  className={`w-13 h-13 rounded-2xl bg-brand-teal text-white flex items-center justify-center shadow-lg shadow-brand-teal/35 p-3.5 transition-all duration-200 transform group-hover:scale-105 active:scale-95 border-2 border-white ${
-                    isActive ? 'ring-4 ring-brand-teal/20 bg-teal-700' : ''
+                  className={`w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-teal to-teal-700 text-white flex items-center justify-center shadow-lg shadow-brand-teal/35 transition-all duration-200 transform group-hover:scale-105 active:scale-95 border-2 border-white ${
+                    isActive ? 'ring-4 ring-brand-teal/20' : ''
                   }`}
                 >
                   <Plus className="w-6 h-6 stroke-[2.5]" />
                 </div>
                 <span
-                  className={`text-[10px] font-bold mt-1 tracking-tight transition-colors ${
+                  className={`text-[10px] font-bold mt-0.5 tracking-tight transition-colors ${
                     isActive ? 'text-brand-teal' : 'text-brand-muted'
                   }`}
                 >
@@ -65,8 +66,9 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onSelectT
           return (
             <button
               key={tab.key}
+              type="button"
               onClick={() => handleTabSelect(tab.key)}
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-150 relative group ${
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-150 relative group ${
                 isActive ? 'text-brand-navy' : 'text-brand-muted hover:text-brand-navy'
               }`}
             >
@@ -86,7 +88,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onSelectT
               </div>
 
               <span
-                className={`text-[11px] font-semibold mt-1 tracking-tight ${
+                className={`text-[10px] font-semibold mt-1 tracking-tight ${
                   isActive ? 'text-brand-navy font-bold' : 'text-brand-muted'
                 }`}
               >
@@ -95,15 +97,12 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onSelectT
 
               {/* Active Indicator Bar */}
               {isActive && (
-                <div className="w-4 h-0.5 bg-brand-teal rounded-full mt-0.5" />
+                <div className="w-3.5 h-0.5 bg-brand-teal rounded-full mt-0.5" />
               )}
             </button>
           );
         })}
       </div>
-
-      {/* iOS Home Bar Indicator */}
-      <div className="w-32 h-1 bg-slate-300 rounded-full mx-auto mt-2" />
-    </div>
+    </nav>
   );
 };

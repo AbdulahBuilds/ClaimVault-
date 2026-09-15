@@ -102,7 +102,7 @@ const AppNavigator: React.FC = () => {
         />
 
         {/* Dynamic Screen View */}
-        <div className="flex-1 overflow-hidden relative">
+        <main className="flex-1 w-full min-h-0 overflow-hidden relative flex flex-col">
           {currentView === 'onboarding' && (
             <OnboardingScreen
               onComplete={() => {
@@ -212,14 +212,16 @@ const AppNavigator: React.FC = () => {
               )}
             </>
           )}
-        </div>
+        </main>
 
         {/* Bottom Tab Bar (shown when in authenticated main tabs) */}
         {isAuthenticated && currentView === 'main' && (
-          <BottomTabBar
-            activeTab={activeTab}
-            onSelectTab={handleSelectTab}
-          />
+          <div className="shrink-0 z-40 w-full">
+            <BottomTabBar
+              activeTab={activeTab}
+              onSelectTab={handleSelectTab}
+            />
+          </div>
         )}
 
         {/* Global Notifications Modal */}
