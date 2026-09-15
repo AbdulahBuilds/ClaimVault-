@@ -1,0 +1,47 @@
+{
+  "name": "ClaimVault",
+  "slug": "claimvault",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./public/icons/icon-512.svg",
+  "userInterfaceStyle": "light",
+  "splash": {
+    "image": "./public/icons/icon-512.svg",
+    "resizeMode": "contain",
+    "backgroundColor": "#123B5D"
+  },
+  "assetBundlePatterns": ["**/*"],
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.claimvault.app",
+    "infoPlist": {
+      "NSCameraUsageDescription": "ClaimVault needs camera access to scan and save your purchase receipts with AI OCR.",
+      "NSPhotoLibraryUsageDescription": "ClaimVault needs photo access to attach warranty and invoice receipts.",
+      "NSUserNotificationsUsageDescription": "ClaimVault sends you alerts before warranties and return windows expire."
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./public/icons/icon-512.svg",
+      "backgroundColor": "#123B5D"
+    },
+    "package": "com.claimvault.app",
+    "versionCode": 100,
+    "permissions": [
+      "CAMERA",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE",
+      "POST_NOTIFICATIONS",
+      "VIBRATE"
+    ]
+  },
+  "web": {
+    "favicon": "./public/icons/icon-192.svg",
+    "bundler": "vite"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "claimvault-production"
+    }
+  }
+}

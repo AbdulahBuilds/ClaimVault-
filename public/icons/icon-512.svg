@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#123B5D"/>
+      <stop offset="50%" stop-color="#0F2F4A"/>
+      <stop offset="100%" stop-color="#0A1F33"/>
+    </linearGradient>
+    <linearGradient id="tealGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2DD4BF"/>
+      <stop offset="50%" stop-color="#0F8B8D"/>
+      <stop offset="100%" stop-color="#0D6E70"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded App Icon Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  
+  <!-- Subtle Grid Accent -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#0F8B8D" stroke-width="1.5" stroke-opacity="0.15"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#0F8B8D" stroke-width="1" stroke-opacity="0.08"/>
+
+  <!-- Shield Shape -->
+  <g filter="url(#shadow)">
+    <path d="M256 96 C336 96 384 136 384 136 V248 C384 336 296 396 256 416 C216 396 128 336 128 248 V136 C128 136 176 96 256 96 Z" fill="url(#tealGlow)"/>
+    
+    <!-- Shield Highlight Layer -->
+    <path d="M256 112 C324 112 364 146 364 146 V244 C364 320 290 374 256 394 C222 374 148 320 148 244 V146 C148 146 188 112 256 112 Z" fill="#123B5D" fill-opacity="0.25"/>
+    
+    <!-- Checkmark & Safe Lock Core -->
+    <path d="M216 256 L244 284 L300 220" fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
