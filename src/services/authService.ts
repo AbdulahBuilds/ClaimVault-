@@ -1,6 +1,7 @@
 import { UserProfile } from '../types';
 import { storageService, STORAGE_KEYS } from './storageService';
 import { emailService } from './emailService';
+import { cloudSyncService } from './cloudSyncService';
 
 interface StoredOtp {
   code: string;
@@ -31,6 +32,24 @@ class AuthService {
     const trimmed = email.trim().toLowerCase();
     const creds = this.getCredentials();
     return !!creds[trimmed];
+  }
+
+  public async isEmailRegisteredAsync(email: string): Promise<boolean> {
+    const trimmed = email.trim().toLowerCase();
+    const creds = this.getCredentials();
+    if (creds[trimmed]) return true;
+
+    try {
+      const cloudUser = await cloudSyncService.fetchUserFromCloud(trimmed);
+      if (cloudUser) {
+        creds[trimmed] = cloudUser.passwordHash;
+        this.saveCredentials(creds);
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
   }
 
   private sanitizeAvatar(avatarUrl?: string): string | undefined {
@@ -77,12 +96,29 @@ class AuthService {
     const trimmedEmail = email.trim().toLowerCase();
     const creds = this.getCredentials();
 
-    // Check if account exists
+    // 1. If not found in local credentials, check Supabase Cloud for cross-device support
+    if (!creds[trimmedEmail]) {
+      try {
+        const cloudData = await cloudSyncService.fetchUserFromCloud(trimmedEmail);
+        if (cloudData) {
+          creds[trimmedEmail] = cloudData.passwordHash;
+          this.saveCredentials(creds);
+
+          const registeredUsers = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+          registeredUsers[trimmedEmail] = cloudData.user;
+          storageService.setItem(USERS_REGISTRY_KEY, registeredUsers);
+        }
+      } catch (err) {
+        console.warn('[AuthService] Error checking cloud user during login:', err);
+      }
+    }
+
+    // 2. Strict Check: If email is still not found, deny access
     if (!creds[trimmedEmail]) {
       throw new Error('No account found with this email address. Please click "Create Account" below to register.');
     }
 
-    // Verify password
+    // 3. Strict Check: Verify password
     if (password && creds[trimmedEmail] !== password) {
       throw new Error('Incorrect password. Please verify your password or use "Forgot password?".');
     }
@@ -107,6 +143,10 @@ class AuthService {
     };
 
     storageService.setItem(STORAGE_KEYS.USER, user);
+
+    // Sync user state to Supabase in background
+    cloudSyncService.syncUserToCloud(user, creds[trimmedEmail]).catch(() => {});
+
     return user;
   }
 
@@ -118,6 +158,18 @@ class AuthService {
 
     if (creds[trimmedEmail]) {
       throw new Error('An account with this email address already exists. Please sign in instead.');
+    }
+
+    // Check Supabase Cloud if account already exists on another device
+    try {
+      const cloudData = await cloudSyncService.fetchUserFromCloud(trimmedEmail);
+      if (cloudData) {
+        throw new Error('An account with this email address already exists. Please sign in instead.');
+      }
+    } catch (e: any) {
+      if (e.message && e.message.includes('already exists')) {
+        throw e;
+      }
     }
 
     if (!password || password.length < 6) {
@@ -146,10 +198,31 @@ class AuthService {
 
     storageService.setItem(STORAGE_KEYS.USER, user);
 
+    // Sync account to Supabase Cloud
+    await cloudSyncService.syncUserToCloud(user, password);
+
     // Send welcome confirmation email in background
     emailService.sendWelcomeEmail(trimmedEmail, trimmedName).catch(() => {});
 
     return user;
+  }
+
+  public async syncAllLocalDataToCloud(): Promise<void> {
+    const creds = this.getCredentials();
+    const registeredUsers = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+    
+    for (const [email, user] of Object.entries(registeredUsers)) {
+      const password = creds[email];
+      if (user && user.email) {
+        await cloudSyncService.syncUserToCloud(user, password);
+      }
+    }
+
+    const currentUser = this.getUser();
+    if (currentUser && currentUser.email) {
+      const password = creds[currentUser.email.toLowerCase().trim()];
+      await cloudSyncService.syncUserToCloud(currentUser, password);
+    }
   }
 
   public async loginWithGoogle(googleUser?: { name?: string; email?: string; avatarUrl?: string }): Promise<UserProfile> {
@@ -184,6 +257,10 @@ class AuthService {
     storageService.setItem(USERS_REGISTRY_KEY, registeredUsers);
 
     storageService.setItem(STORAGE_KEYS.USER, user);
+
+    // Sync Google account to Supabase Cloud
+    cloudSyncService.syncUserToCloud(user, creds[finalEmail]).catch(() => {});
+
     return user;
   }
 
@@ -273,6 +350,13 @@ class AuthService {
     const current = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
     if (current && current.email?.toLowerCase() === trimmed) {
       storageService.setItem(STORAGE_KEYS.USER, current);
+      cloudSyncService.syncUserToCloud(current, newPassword).catch(() => {});
+    } else {
+      const registeredUsers = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+      const regUser = registeredUsers[trimmed];
+      if (regUser) {
+        cloudSyncService.syncUserToCloud(regUser, newPassword).catch(() => {});
+      }
     }
 
     return true;

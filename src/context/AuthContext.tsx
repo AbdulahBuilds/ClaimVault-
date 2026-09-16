@@ -31,6 +31,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const onboardingDone = authService.isOnboardingCompleted();
     setUser(currentUser);
     setIsOnboardingCompleted(onboardingDone);
+
+    // Automatically sync any existing local laptop accounts to Supabase Cloud
+    authService.syncAllLocalDataToCloud().catch(() => {});
   }, []);
 
   const login = async (email: string, password?: string) => {

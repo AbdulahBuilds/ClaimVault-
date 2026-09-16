@@ -31,7 +31,9 @@ import { DeleteConfirmModal } from '../components/modals/DeleteConfirmModal';
 import { DeleteReceiptModal } from '../components/modals/DeleteReceiptModal';
 import { ReceiptOptionsModal } from '../components/modals/ReceiptOptionsModal';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { Receipt } from '../types';
+import { supabaseStorageService } from '../services/supabaseStorageService';
 
 interface ProductDetailScreenProps {
   productId: string;
@@ -46,29 +48,33 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
   onEdit,
   onDeleted,
 }) => {
-  const { getProductById, updateProduct, deleteProduct } = useProducts();
-  const product = getProductById(productId);
+  const { user } = useAuth();
+  const { products, updateProduct, deleteProduct } = useProducts();
   const { showToast } = useToast();
+  const product = products.find((p) => p.id === productId);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [isReceiptOptionsOpen, setIsReceiptOptionsOpen] = useState(false);
-  const [isDeleteReceiptModalOpen, setIsDeleteReceiptModalOpen] = useState(false);
   const [isDeleteProductModalOpen, setIsDeleteProductModalOpen] = useState(false);
+  const [isDeleteReceiptModalOpen, setIsDeleteReceiptModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
 
   if (!product) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-brand-bg">
-        <Package className="w-12 h-12 text-brand-muted mb-3" />
-        <h2 className="text-base font-bold text-brand-navy mb-1">Product Not Found</h2>
-        <p className="text-xs text-brand-muted mb-4">
-          This product might have been deleted or does not exist.
+        <div className="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
+          <Package className="w-8 h-8" />
+        </div>
+        <h2 className="text-base font-bold text-brand-navy">Product Not Found</h2>
+        <p className="text-xs text-brand-muted mt-1 max-w-xs">
+          This product might have been deleted or moved.
         </p>
-        <Button variant="primary" size="md" onClick={onBack}>
-          Back to Products
+        <Button variant="primary" size="md" className="mt-4" onClick={onBack}>
+          Back to Vault
         </Button>
       </div>
     );
@@ -91,26 +97,32 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
     }
   };
 
-  // Handle File / Camera Selection for Receipt
+  // Handle Real File Selection for Receipt
   const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const objectUrl = URL.createObjectURL(file);
-    const newReceipt: Receipt = {
-      id: `rec-${Date.now()}`,
-      imageUrl: objectUrl,
-      fileName: file.name,
-      uploadedAt: new Date().toISOString(),
-      fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-    };
+    setIsUploadingReceipt(true);
+    showToast('Uploading receipt to Supabase Cloud Storage...', 'info');
 
     try {
+      const userEmail = user?.email || 'user';
+      const uploaded = await supabaseStorageService.uploadReceiptImage(file, userEmail, file.name);
+
+      const newReceipt: Receipt = {
+        id: `rec-${Date.now()}`,
+        imageUrl: uploaded.publicUrl,
+        fileName: uploaded.fileName,
+        uploadedAt: new Date().toISOString(),
+        fileSize: uploaded.fileSize,
+      };
+
       await updateProduct(product.id, { receipt: newReceipt });
-      showToast('Receipt saved to product vault', 'success');
+      showToast('Receipt saved to Supabase Cloud Storage', 'success');
     } catch {
-      showToast('Failed to update receipt', 'error');
+      showToast('Failed to upload receipt', 'error');
     } finally {
+      setIsUploadingReceipt(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (cameraInputRef.current) cameraInputRef.current.value = '';
     }
@@ -138,6 +150,9 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
   const handleConfirmDeleteReceipt = async () => {
     setIsDeleting(true);
     try {
+      if (product.receipt?.imageUrl) {
+        supabaseStorageService.deleteImage(product.receipt.imageUrl).catch(() => {});
+      }
       await updateProduct(product.id, { receipt: undefined });
       showToast('Receipt removed from product', 'info');
       setIsDeleteReceiptModalOpen(false);

@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Camera, Image as ImageIcon, Upload, X, ShieldCheck, CheckCircle2, Sparkles, FileText, Eye } from 'lucide-react';
+import { Camera, Image as ImageIcon, Upload, X, ShieldCheck, CheckCircle2, Sparkles, FileText, Eye, Loader2, CloudUpload } from 'lucide-react';
 import { Receipt } from '../../types';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { triggerHaptic } from '../../utils/haptics';
+import { supabaseStorageService } from '../../services/supabaseStorageService';
 
 interface ReceiptUploadBoxProps {
   receipt?: Receipt;
@@ -10,29 +12,43 @@ interface ReceiptUploadBoxProps {
 }
 
 export const ReceiptUploadBox: React.FC<ReceiptUploadBoxProps> = ({ receipt, onChange }) => {
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(receipt?.imageUrl);
+  const [isUploading, setIsUploading] = useState(false);
   const { showToast } = useToast();
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     triggerHaptic('success');
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    setIsUploading(true);
 
-    const newReceipt: Receipt = {
-      id: `rec-${Date.now()}`,
-      imageUrl: objectUrl,
-      fileName: file.name,
-      uploadedAt: new Date().toISOString(),
-      fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-    };
+    try {
+      const userEmail = user?.email || 'user';
+      const uploaded = await supabaseStorageService.uploadReceiptImage(file, userEmail, file.name);
 
-    onChange(newReceipt);
-    showToast('Receipt attached to product', 'success');
+      setPreviewUrl(uploaded.publicUrl);
+
+      const newReceipt: Receipt = {
+        id: `rec-${Date.now()}`,
+        imageUrl: uploaded.publicUrl,
+        fileName: uploaded.fileName,
+        uploadedAt: new Date().toISOString(),
+        fileSize: uploaded.fileSize,
+      };
+
+      onChange(newReceipt);
+      showToast('Receipt uploaded to cloud storage', 'success');
+    } catch {
+      showToast('Could not upload to cloud, saved locally', 'info');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+    }
   };
 
   const handleSimulatePreset = (imageUrl: string, fileName: string) => {
@@ -52,6 +68,9 @@ export const ReceiptUploadBox: React.FC<ReceiptUploadBoxProps> = ({ receipt, onC
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic('light');
+    if (previewUrl) {
+      supabaseStorageService.deleteImage(previewUrl).catch(() => {});
+    }
     setPreviewUrl(undefined);
     onChange(undefined);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -99,7 +118,17 @@ export const ReceiptUploadBox: React.FC<ReceiptUploadBoxProps> = ({ receipt, onC
         onChange={handleFileSelect}
       />
 
-      {previewUrl ? (
+      {isUploading ? (
+        <div className="w-full rounded-2xl border border-brand-teal/40 bg-teal-50/40 p-6 flex flex-col items-center justify-center text-center space-y-2.5">
+          <div className="w-10 h-10 rounded-full bg-teal-100 text-brand-teal flex items-center justify-center animate-spin">
+            <Loader2 className="w-5 h-5 text-brand-teal" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-brand-navy">Uploading to Supabase Storage...</p>
+            <p className="text-[11px] text-brand-muted">Encrypting & generating permanent cloud receipt link</p>
+          </div>
+        </div>
+      ) : previewUrl ? (
         <div className="relative w-full rounded-2xl overflow-hidden border border-brand-border bg-slate-900 group shadow-md transition">
           <img
             src={previewUrl}

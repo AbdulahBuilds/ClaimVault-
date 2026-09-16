@@ -93,6 +93,13 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
 
     setIsLoading(true);
     try {
+      const isAlreadyRegistered = await authService.isEmailRegisteredAsync(email.trim());
+      if (isAlreadyRegistered) {
+        setErrors({ email: 'An account with this email already exists. Please log in instead.' });
+        setIsLoading(false);
+        return;
+      }
+
       await authService.requestAccountVerificationOtp(email.trim(), name.trim());
       setIsLoading(false);
       setStep('verify_otp');

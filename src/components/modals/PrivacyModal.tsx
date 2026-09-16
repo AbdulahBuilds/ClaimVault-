@@ -18,7 +18,6 @@ import { useProducts } from '../../context/ProductContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { storageService } from '../../services/storageService';
-import { biometricService } from '../../services/biometricService';
 import { Button } from '../ui/Button';
 
 interface PrivacyModalProps {
@@ -32,7 +31,6 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [biometricEnabled, setBiometricEnabled] = useState(() => biometricService.isEnabled());
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -192,64 +190,6 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
                   <span className="text-xs font-extrabold text-brand-teal">{usageStats.receiptsCount}</span>
                 </div>
               </div>
-            </div>
-
-            {/* Biometric Security Lock */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-navy flex items-center justify-center shadow-sm">
-                    <KeyRound className="w-4 h-4 text-brand-teal" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-brand-navy">Biometric App Lock</h4>
-                    <p className="text-[10px] text-brand-muted">Require FaceID / TouchID / Windows Hello</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const nextState = !biometricEnabled;
-                    if (nextState) {
-                      await biometricService.registerBiometrics(user?.email || 'user@claimvault.pk');
-                      biometricService.setEnabled(true);
-                      setBiometricEnabled(true);
-                      showToast('Biometric lock enabled on this device', 'success');
-                    } else {
-                      biometricService.setEnabled(false);
-                      setBiometricEnabled(false);
-                      showToast('Biometric lock disabled', 'info');
-                    }
-                  }}
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
-                    biometricEnabled ? 'bg-brand-teal' : 'bg-slate-300'
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-transform ${
-                      biometricEnabled ? 'right-0.5' : 'left-0.5'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {biometricEnabled && (
-                <div className="pt-1 flex items-center justify-between border-t border-slate-200/60">
-                  <span className="text-[10px] text-brand-muted">Device PIN Fallback: <strong>1234</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      biometricService.setSessionUnlocked(false);
-                      window.location.reload();
-                    }}
-                    className="text-[10px] font-bold text-brand-teal hover:underline flex items-center gap-1"
-                  >
-                    <Lock className="w-3 h-3" />
-                    <span>Test Lock Now</span>
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Export Vault Backup */}

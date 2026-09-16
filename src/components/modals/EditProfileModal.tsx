@@ -6,6 +6,8 @@ import { useToast } from '../../context/ToastContext';
 import { InputField } from '../ui/InputField';
 import { Button } from '../ui/Button';
 
+import { supabaseStorageService } from '../../services/supabaseStorageService';
+
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,13 +21,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [email, setEmail] = useState(user?.email || 'user@example.com');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user?.avatarUrl);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
   const initialLetter = (name.trim() || user?.name || 'U').charAt(0).toUpperCase();
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -39,15 +42,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        setAvatarUrl(result);
-        showToast('Photo uploaded! Click Save Profile to apply.', 'success', 2500);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingPhoto(true);
+    try {
+      const publicUrl = await supabaseStorageService.uploadAvatar(file, user?.email || email || 'user');
+      setAvatarUrl(publicUrl);
+      showToast('Profile picture uploaded to cloud! Click Save Profile to apply.', 'success', 2500);
+    } catch {
+      showToast('Photo upload failed, please try again', 'error');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const handleRemovePhoto = () => {
@@ -114,7 +118,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
 
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-brand-navy via-slate-800 to-teal-800 text-white flex items-center justify-center font-extrabold text-3xl shadow-card overflow-hidden border-2 border-brand-teal group-hover:scale-105 transition-transform duration-200">
-                  {avatarUrl ? (
+                  {isUploadingPhoto ? (
+                    <div className="w-full h-full flex items-center justify-center bg-brand-navy">
+                      <div className="w-6 h-6 border-2 border-brand-teal border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : avatarUrl ? (
                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <span>{initialLetter}</span>
