@@ -40,6 +40,11 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onGo
       return;
     }
 
+    if (!authService.isEmailRegistered(email.trim())) {
+      setErrors({ email: 'No account found with this email address. Please create an account.' });
+      return;
+    }
+
     setErrors({});
     setIsLoading(true);
     try {

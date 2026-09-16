@@ -11,19 +11,26 @@ interface StoredOtp {
 
 const OTP_STORAGE_KEY = 'claimvault_auth_otps_v1';
 const CREDENTIALS_STORAGE_KEY = 'claimvault_auth_credentials_v1';
+const USERS_REGISTRY_KEY = 'claimvault_registered_users_v1';
 
 class AuthService {
   /**
    * Retrieves all registered email-password credentials
    */
-  private getCredentials(): Record<string, string> {
+  public getCredentials(): Record<string, string> {
     return storageService.getItem<Record<string, string>>(CREDENTIALS_STORAGE_KEY) || {
       'demo@claimvault.com': 'password123',
     };
   }
 
-  private saveCredentials(creds: Record<string, string>): void {
+  public saveCredentials(creds: Record<string, string>): void {
     storageService.setItem(CREDENTIALS_STORAGE_KEY, creds);
+  }
+
+  public isEmailRegistered(email: string): boolean {
+    const trimmed = email.trim().toLowerCase();
+    const creds = this.getCredentials();
+    return !!creds[trimmed];
   }
 
   private sanitizeAvatar(avatarUrl?: string): string | undefined {
@@ -70,33 +77,35 @@ class AuthService {
     const trimmedEmail = email.trim().toLowerCase();
     const creds = this.getCredentials();
 
-    // Verify password if account exists in credentials database
-    if (creds[trimmedEmail] && password) {
-      if (creds[trimmedEmail] !== password) {
-        throw new Error('Incorrect password. Please try again or use Forgot Password.');
-      }
-    } else if (password) {
-      // First-time or demo login - register password
-      creds[trimmedEmail] = password;
-      this.saveCredentials(creds);
+    // Check if account exists
+    if (!creds[trimmedEmail]) {
+      throw new Error('No account found with this email address. Please click "Create Account" below to register.');
     }
+
+    // Verify password
+    if (password && creds[trimmedEmail] !== password) {
+      throw new Error('Incorrect password. Please verify your password or use "Forgot password?".');
+    }
+
+    const registeredUsers = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+    const existing = registeredUsers[trimmedEmail];
 
     const rawName = trimmedEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ') || 'User';
     const capitalizedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
     const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const existing = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
-    const user: UserProfile = {
-      id: existing?.id || `user-${Date.now()}`,
-      name: existing?.email?.toLowerCase() === trimmedEmail ? existing.name : capitalizedName,
+    const user: UserProfile = existing || {
+      id: `user-${Date.now()}`,
+      name: capitalizedName,
       email: trimmedEmail,
-      avatarUrl: existing?.email?.toLowerCase() === trimmedEmail ? this.sanitizeAvatar(existing?.avatarUrl) : undefined,
-      currency: existing?.currency || 'PKR',
+      avatarUrl: undefined,
+      currency: 'PKR',
       isPro: true,
-      memberSince: existing?.memberSince || currentMonthYear,
+      memberSince: currentMonthYear,
       notificationsEnabled: true,
       reminderLeadTimes: [30, 14, 7, 1],
     };
+
     storageService.setItem(STORAGE_KEYS.USER, user);
     return user;
   }
@@ -105,13 +114,18 @@ class AuthService {
     await new Promise((r) => setTimeout(r, 200));
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim() || 'User';
+    const creds = this.getCredentials();
 
-    // Persist password in credentials store
-    if (password) {
-      const creds = this.getCredentials();
-      creds[trimmedEmail] = password;
-      this.saveCredentials(creds);
+    if (creds[trimmedEmail]) {
+      throw new Error('An account with this email address already exists. Please sign in instead.');
     }
+
+    if (!password || password.length < 6) {
+      throw new Error('Password must be at least 6 characters long.');
+    }
+
+    creds[trimmedEmail] = password;
+    this.saveCredentials(creds);
 
     const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     const user: UserProfile = {
@@ -125,6 +139,11 @@ class AuthService {
       notificationsEnabled: true,
       reminderLeadTimes: [30, 14, 7, 1],
     };
+
+    const registeredUsers = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+    registeredUsers[trimmedEmail] = user;
+    storageService.setItem(USERS_REGISTRY_KEY, registeredUsers);
+
     storageService.setItem(STORAGE_KEYS.USER, user);
 
     // Send welcome confirmation email in background
@@ -139,8 +158,16 @@ class AuthService {
     const finalName = (googleUser?.name || 'Google User').trim();
     const finalAvatar = this.sanitizeAvatar(googleUser?.avatarUrl);
 
+    const creds = this.getCredentials();
+    if (!creds[finalEmail]) {
+      creds[finalEmail] = `google_oauth_${Date.now()}`;
+      this.saveCredentials(creds);
+    }
+
     const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const existing = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
+    const registeredUsers = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+    const existing = registeredUsers[finalEmail] || storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
+
     const user: UserProfile = {
       id: existing?.id || `user-google-${Date.now()}`,
       name: finalName,
@@ -152,6 +179,10 @@ class AuthService {
       notificationsEnabled: true,
       reminderLeadTimes: [30, 14, 7, 1],
     };
+
+    registeredUsers[finalEmail] = user;
+    storageService.setItem(USERS_REGISTRY_KEY, registeredUsers);
+
     storageService.setItem(STORAGE_KEYS.USER, user);
     return user;
   }

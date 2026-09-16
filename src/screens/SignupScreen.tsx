@@ -72,6 +72,9 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onGoToLogin, onSignu
     if (!name.trim()) newErrors.name = 'Full name is required';
     if (!email) newErrors.email = 'Email address is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Please enter a valid email address';
+    else if (authService.isEmailRegistered(email.trim())) {
+      newErrors.email = 'An account with this email already exists. Please log in instead.';
+    }
 
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
