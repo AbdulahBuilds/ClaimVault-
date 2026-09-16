@@ -42,7 +42,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
     updatePreferences, 
     sendSampleNotification, 
     openPermissionModal, 
-    hasPermission 
+    requestPermission,
+    hasPermission,
+    devicePermission 
   } = useNotifications();
   const { showToast } = useToast();
 
@@ -62,11 +64,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
     updatePreferences({ leadTimes: next });
   };
 
-  const handleTogglePush = () => {
+  const handleTogglePush = async () => {
     const nextState = !preferences.enabled;
     updatePreferences({ enabled: nextState });
     if (nextState && !hasPermission) {
-      openPermissionModal();
+      await requestPermission();
     }
   };
 
@@ -193,6 +195,36 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
               </button>
             </div>
 
+            {/* Device Permission Status Indicator */}
+            <div className="px-4 py-2.5 bg-slate-50/60 flex items-center justify-between border-y border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  devicePermission === 'granted'
+                    ? 'bg-emerald-500 animate-pulse'
+                    : devicePermission === 'denied'
+                    ? 'bg-rose-500'
+                    : 'bg-amber-500'
+                }`} />
+                <span className="text-[11px] font-semibold text-brand-navy">
+                  {devicePermission === 'granted'
+                    ? 'Device Push Ready'
+                    : devicePermission === 'denied'
+                    ? 'Device Push Blocked in Browser'
+                    : 'Device Permission Needed'}
+                </span>
+              </div>
+
+              {devicePermission !== 'granted' && (
+                <button
+                  type="button"
+                  onClick={() => requestPermission()}
+                  className="text-[11px] font-bold text-brand-teal bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-0.5 rounded-lg transition"
+                >
+                  Enable on Device
+                </button>
+              )}
+            </div>
+
             {/* Reminder Lead Times */}
             <div className="p-4 space-y-2.5">
               <div className="flex items-center justify-between">
@@ -226,15 +258,24 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
                 })}
               </div>
 
-              {/* Test Notification Button */}
-              <div className="pt-2">
+              {/* Test Notification Buttons */}
+              <div className="pt-2 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => sendSampleNotification('return')}
-                  className="w-full py-2 px-3 rounded-xl bg-teal-50 hover:bg-teal-100/70 border border-teal-200 text-brand-teal text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
+                  className="py-2 px-2.5 rounded-xl bg-teal-50 hover:bg-teal-100/70 border border-teal-200 text-brand-teal text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
                 >
                   <Bell className="w-3.5 h-3.5" />
-                  <span>Send Test Push Notification</span>
+                  <span>Test Return Alert</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => sendSampleNotification('warranty')}
+                  className="py-2 px-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-brand-navy text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-brand-teal" />
+                  <span>Test Warranty Alert</span>
                 </button>
               </div>
             </div>

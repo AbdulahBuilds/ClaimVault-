@@ -1,10 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { 
   PushNotificationItem, 
   NotificationPreferences, 
   notificationService, 
   DEFAULT_NOTIFICATION_PREFERENCES 
 } from '../services/notificationService';
+import { 
+  deviceNotificationService, 
+  DevicePermissionStatus 
+} from '../services/deviceNotificationService';
 import { useProducts } from './ProductContext';
 import { useToast } from './ToastContext';
 
@@ -14,13 +18,17 @@ interface NotificationContextType {
   preferences: NotificationPreferences;
   activeBanner: PushNotificationItem | null;
   hasPermission: boolean;
+  devicePermission: DevicePermissionStatus;
   isPermissionModalOpen: boolean;
   requestPermission: () => Promise<boolean>;
   openPermissionModal: () => void;
   closePermissionModal: () => void;
   dismissBanner: () => void;
-  triggerPushNotification: (item: Omit<PushNotificationItem, 'id' | 'timestamp' | 'isRead' | 'status'>) => void;
-  sendSampleNotification: (type?: 'return' | 'warranty') => void;
+  triggerPushNotification: (
+    item: Omit<PushNotificationItem, 'id' | 'timestamp' | 'isRead' | 'status'>,
+    sendToDevice?: boolean
+  ) => Promise<boolean>;
+  sendSampleNotification: (type?: 'return' | 'warranty') => Promise<void>;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
@@ -37,16 +45,28 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     notificationService.getPreferences()
   );
   const [activeBanner, setActiveBanner] = useState<PushNotificationItem | null>(null);
-  const [hasPermission, setHasPermission] = useState<boolean>(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      return Notification.permission === 'granted';
-    }
-    return true;
-  });
+  const [devicePermission, setDevicePermission] = useState<DevicePermissionStatus>(() =>
+    deviceNotificationService.getPermissionStatus()
+  );
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
 
   const { products } = useProducts();
   const { showToast } = useToast();
+  const deliveredDeviceIds = useRef<Set<string>>(new Set());
+
+  const hasPermission = devicePermission === 'granted';
+
+  // Check and refresh permission status periodically and on focus
+  useEffect(() => {
+    const updatePerm = () => {
+      const status = deviceNotificationService.getPermissionStatus();
+      setDevicePermission(status);
+    };
+
+    updatePerm();
+    window.addEventListener('focus', updatePerm);
+    return () => window.removeEventListener('focus', updatePerm);
+  }, []);
 
   // Save to persistent storage whenever notifications change
   useEffect(() => {
@@ -58,6 +78,25 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     notificationService.savePreferences(preferences);
   }, [preferences]);
 
+  // Request notification permissions gracefully
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    const granted = await deviceNotificationService.requestPermission();
+    const status = deviceNotificationService.getPermissionStatus();
+    setDevicePermission(status);
+    setIsPermissionModalOpen(false);
+
+    if (granted) {
+      showToast('Device notifications enabled successfully! 🔔', 'success', 3000);
+    } else if (status === 'denied') {
+      showToast(
+        'Device notifications are blocked in your browser. Click the site settings icon in your address bar to allow.',
+        'error',
+        5000
+      );
+    }
+    return granted;
+  }, [showToast]);
+
   // Automatically generate reminders into notification center when products change
   useEffect(() => {
     if (products.length > 0 && preferences.enabled) {
@@ -67,17 +106,38 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         const newItems = generated.filter((g) => !existingIds.has(g.id));
         return [...newItems, ...prev];
       });
+
+      // Auto-trigger device notification for urgent upcoming items (due today or within 1 day)
+      if (hasPermission) {
+        generated.forEach((gen) => {
+          if (
+            (gen.leadTimeDays === 0 || gen.leadTimeDays === 1) &&
+            !deliveredDeviceIds.current.has(gen.id)
+          ) {
+            deliveredDeviceIds.current.add(gen.id);
+            deviceNotificationService.sendDeviceNotification({
+              title: gen.title,
+              body: gen.body,
+              tag: gen.id,
+              sound: preferences.sound,
+            });
+          }
+        });
+      }
     }
-  }, [products, preferences]);
+  }, [products, preferences, hasPermission]);
 
   // Dismiss active push banner
   const dismissBanner = useCallback(() => {
     setActiveBanner(null);
   }, []);
 
-  // Trigger an immediate push notification
+  // Trigger a push notification (both on device OS and in-app floating banner)
   const triggerPushNotification = useCallback(
-    (item: Omit<PushNotificationItem, 'id' | 'timestamp' | 'isRead' | 'status'>) => {
+    async (
+      item: Omit<PushNotificationItem, 'id' | 'timestamp' | 'isRead' | 'status'>,
+      sendToDevice: boolean = true
+    ): Promise<boolean> => {
       const newNotif: PushNotificationItem = {
         ...item,
         id: `push-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
@@ -91,77 +151,67 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Pop in-app animated push banner
       setActiveBanner(newNotif);
 
-      // Web Notification API fallback if supported and allowed
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(newNotif.title, {
-            body: newNotif.body,
-            icon: '/favicon.ico',
-          });
-        } catch (e) {
-          console.warn('Browser notification error', e);
-        }
-      }
-
-      // Auto dismiss banner after 6 seconds
+      // Auto dismiss in-app banner after 6 seconds
       setTimeout(() => {
         setActiveBanner((current) => (current?.id === newNotif.id ? null : current));
       }, 6000);
+
+      // Trigger native Device OS notification
+      if (sendToDevice && preferences.enabled) {
+        const result = await deviceNotificationService.sendDeviceNotification({
+          title: newNotif.title,
+          body: newNotif.body,
+          tag: newNotif.id,
+          sound: preferences.sound,
+        });
+
+        // Update local permission state
+        setDevicePermission(deviceNotificationService.getPermissionStatus());
+        return result.success;
+      }
+
+      return true;
     },
-    []
+    [preferences]
   );
 
-  // Send a realistic sample notification for demonstration
+  // Send a realistic sample notification to test OS/Device integration
   const sendSampleNotification = useCallback(
-    (type: 'return' | 'warranty' = 'return') => {
-      if (type === 'return') {
-        triggerPushNotification({
-          productName: 'Samsung Galaxy A55',
-          title: 'Return Window Notice',
-          body: 'Samsung Galaxy A55 return period ends tomorrow. Inspect items if you plan to return.',
-          type: 'return',
-          leadTimeDays: 1,
-        });
+    async (type: 'return' | 'warranty' = 'return') => {
+      const sampleItem =
+        type === 'return'
+          ? {
+              productName: 'Samsung Galaxy A55',
+              title: 'Return Window Notice',
+              body: 'Samsung Galaxy A55 return period ends tomorrow. Inspect items if you plan to return.',
+              type: 'return' as const,
+              leadTimeDays: 1,
+            }
+          : {
+              productName: 'Dell Laptop',
+              title: 'Warranty Expiry Alert',
+              body: 'Dell Laptop warranty expires in 7 days. Check hardware before coverage ends.',
+              type: 'warranty' as const,
+              leadTimeDays: 7,
+            };
+
+      const deviceDelivered = await triggerPushNotification(sampleItem, true);
+      const perm = deviceNotificationService.getPermissionStatus();
+
+      if (perm === 'granted') {
+        showToast('Device notification sent! Check your system notification center 🔔', 'success', 3500);
+      } else if (perm === 'denied') {
+        showToast(
+          'Notifications are blocked in your browser settings. Please allow notifications in your address bar.',
+          'error',
+          5000
+        );
       } else {
-        triggerPushNotification({
-          productName: 'Dell Laptop',
-          title: 'Warranty Expiry Alert',
-          body: 'Dell Laptop warranty expires in 7 days. Check hardware before coverage ends.',
-          type: 'warranty',
-          leadTimeDays: 7,
-        });
+        showToast('Sample notification triggered.', 'info', 2500);
       }
-      showToast('Push notification simulated on device', 'success', 2000);
     },
     [triggerPushNotification, showToast]
   );
-
-  // Request notification permissions gracefully
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      try {
-        const result = await Notification.requestPermission();
-        const granted = result === 'granted';
-        setHasPermission(granted);
-        setIsPermissionModalOpen(false);
-        if (granted) {
-          showToast('Notifications enabled successfully', 'success');
-        } else {
-          showToast('Notification permission was declined', 'info');
-        }
-        return granted;
-      } catch {
-        setHasPermission(true);
-        setIsPermissionModalOpen(false);
-        return true;
-      }
-    } else {
-      setHasPermission(true);
-      setIsPermissionModalOpen(false);
-      showToast('Notifications enabled', 'success');
-      return true;
-    }
-  }, [showToast]);
 
   const openPermissionModal = useCallback(() => {
     setIsPermissionModalOpen(true);
@@ -187,13 +237,16 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     showToast('Notifications cleared', 'info');
   }, [showToast]);
 
-  const updatePreferences = useCallback((updates: Partial<NotificationPreferences>) => {
-    setPreferences((prev) => {
-      const next = { ...prev, ...updates };
-      return next;
-    });
-    showToast('Notification preferences updated', 'success', 1800);
-  }, [showToast]);
+  const updatePreferences = useCallback(
+    (updates: Partial<NotificationPreferences>) => {
+      setPreferences((prev) => {
+        const next = { ...prev, ...updates };
+        return next;
+      });
+      showToast('Notification preferences updated', 'success', 1800);
+    },
+    [showToast]
+  );
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -205,6 +258,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         preferences,
         activeBanner,
         hasPermission,
+        devicePermission,
         isPermissionModalOpen,
         requestPermission,
         openPermissionModal,

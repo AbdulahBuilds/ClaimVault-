@@ -7,28 +7,7 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
-    <!-- Automatic Localhost Service Worker Buster -->
-    <script>
-      (function() {
-        var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (isLocal) {
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (var i = 0; i < regs.length; i++) {
-                regs[i].unregister();
-              }
-            }).catch(function() {});
-          }
-          if ('caches' in window) {
-            caches.keys().then(function(keys) {
-              for (var j = 0; j < keys.length; j++) {
-                caches.delete(keys[j]);
-              }
-            }).catch(function() {});
-          }
-        }
-      })();
-    </script>
+    <!-- Service Worker is managed via main.tsx & deviceNotificationService -->
     <title>ClaimVault — Smart Purchase, Warranty & Receipt Vault</title>
     <meta name="description" content="Never lose track of what you bought. Store receipts, monitor return periods with live countdowns, and receive proactive warranty alerts." />
     
