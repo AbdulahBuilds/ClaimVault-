@@ -25,6 +25,7 @@ import { NotificationsModal } from './components/modals/NotificationsModal';
 import { NotificationPermissionModal } from './components/modals/NotificationPermissionModal';
 import { AIScannerModal } from './components/modals/AIScannerModal';
 import { BiometricLockScreen } from './components/auth/BiometricLockScreen';
+import { SplashScreen } from './components/ui/SplashScreen';
 import { biometricService } from './services/biometricService';
 import { ExtractedReceiptData } from './services/aiScannerService';
 
@@ -46,6 +47,9 @@ const AppNavigator: React.FC = () => {
     closePermissionModal, 
     requestPermission 
   } = useNotifications();
+
+  // App Launch Splash Screen State
+  const [showSplash, setShowSplash] = useState<boolean>(true);
 
   // Biometric App Lock State
   const [isVaultLocked, setIsVaultLocked] = useState(() => {
@@ -270,6 +274,15 @@ const AppNavigator: React.FC = () => {
           <BiometricLockScreen
             onUnlock={() => {
               setIsVaultLocked(false);
+            }}
+          />
+        )}
+
+        {/* App Launch Splash Screen with ClaimVault Logo */}
+        {showSplash && (
+          <SplashScreen
+            onFinish={() => {
+              setShowSplash(false);
             }}
           />
         )}

@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { ArrowLeft, Bell, Sparkles } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { ClaimVaultLogo } from '../ui/ClaimVaultLogo';
 
 interface MobileHeaderProps {
   title?: string;
@@ -39,11 +40,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
     return (
       <div className={`w-full px-5 pt-3 pb-4 bg-brand-bg flex items-center justify-between border-b border-brand-border/60 shrink-0 ${className}`}>
         <div className="flex items-center gap-3">
-          <img
-            src="/claimvault-logo.png"
-            alt="ClaimVault"
-            className="w-10 h-10 object-contain rounded-xl shadow-sm border border-slate-200/80 shrink-0 bg-white"
-          />
+          <ClaimVaultLogo size="sm" />
           <div>
             <h1 className="text-lg font-extrabold text-brand-navy tracking-tight leading-tight">
               {getGreeting()}, {userName}

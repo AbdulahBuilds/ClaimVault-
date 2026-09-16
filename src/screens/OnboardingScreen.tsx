@@ -23,12 +23,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, 
       visual: (
         <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
           <div className="absolute inset-0 bg-brand-teal/10 rounded-full animate-pulse" />
-          <div className="w-36 h-36 rounded-3xl bg-white text-white flex items-center justify-center shadow-float border border-brand-teal/30 p-4">
-            <img
-              src="/claimvault-logo.png"
-              alt="ClaimVault"
-              className="w-full h-full object-contain rounded-2xl"
-            />
+          <div className="w-36 h-36 rounded-3xl bg-white text-white flex items-center justify-center shadow-float border border-brand-teal/30 p-2">
+            <ClaimVaultLogo size="xl" />
           </div>
           <div className="absolute -bottom-2 -right-2 bg-white px-3 py-1.5 rounded-xl border border-brand-border shadow-card flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-brand-green" />

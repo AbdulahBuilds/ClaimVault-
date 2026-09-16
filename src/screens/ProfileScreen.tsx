@@ -22,6 +22,7 @@ import { THEME } from '../constants/theme';
 import { formatPKR } from '../utils/currencyUtils';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../context/ToastContext';
+import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
 
 // Profile Modals
 import { EditProfileModal } from '../components/modals/EditProfileModal';
@@ -347,11 +348,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
               className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition"
             >
               <div className="flex items-center gap-3">
-                <img
-                  src="/claimvault-logo.png"
-                  alt="ClaimVault"
-                  className="w-8 h-8 object-contain rounded-xl border border-slate-200 bg-white"
-                />
+                <ClaimVaultLogo size="sm" />
                 <div>
                   <p className="text-xs font-bold text-brand-navy">About {THEME.app.name}</p>
                   <p className="text-[11px] text-brand-muted">Smart purchase & warranty manager</p>
