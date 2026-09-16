@@ -35,7 +35,7 @@ export const ClaimVaultLogo: React.FC<ClaimVaultLogoProps> = ({
   const logoSrc = appLogo || '/claimvault-logo.png';
 
   return (
-    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+    <div className={`inline-flex items-center gap-2.5 shrink-0 ${className}`}>
       <img
         src={logoSrc}
         alt="ClaimVault Logo"
@@ -44,7 +44,7 @@ export const ClaimVaultLogo: React.FC<ClaimVaultLogoProps> = ({
             e.currentTarget.src = '/claimvault-logo.png';
           }
         }}
-        className={`${sizeMap[size]} ${roundedMap[size]} object-contain drop-shadow-sm select-none bg-white p-0.5 border border-slate-200/80 shrink-0`}
+        className={`${sizeMap[size]} ${roundedMap[size]} object-contain select-none shrink-0`}
       />
       {withText && (
         <span className={`font-extrabold tracking-tight ${textColor} ${textSize}`}>
