@@ -26,13 +26,29 @@ class AuthService {
     storageService.setItem(CREDENTIALS_STORAGE_KEY, creds);
   }
 
+  private sanitizeAvatar(avatarUrl?: string): string | undefined {
+    if (!avatarUrl) return undefined;
+    // Strip out legacy default Unsplash placeholders so users get initial letters by default
+    if (avatarUrl.includes('images.unsplash.com') || avatarUrl.includes('ui-avatars.com')) {
+      return undefined;
+    }
+    return avatarUrl;
+  }
+
   public getUser(): UserProfile | null {
     const user = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
     if (user && user.email) {
+      if (user.avatarUrl && (user.avatarUrl.includes('images.unsplash.com') || user.avatarUrl.includes('ui-avatars.com'))) {
+        user.avatarUrl = undefined;
+        storageService.setItem(STORAGE_KEYS.USER, user);
+      }
       return user;
     }
     const legacy = storageService.getItem<UserProfile>(STORAGE_KEYS.LEGACY_USER);
     if (legacy && legacy.email) {
+      if (legacy.avatarUrl && (legacy.avatarUrl.includes('images.unsplash.com') || legacy.avatarUrl.includes('ui-avatars.com'))) {
+        legacy.avatarUrl = undefined;
+      }
       storageService.setItem(STORAGE_KEYS.USER, legacy);
       return legacy;
     }
@@ -68,15 +84,16 @@ class AuthService {
     const rawName = trimmedEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ') || 'User';
     const capitalizedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
+    const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     const existing = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
     const user: UserProfile = {
       id: existing?.id || `user-${Date.now()}`,
       name: existing?.email?.toLowerCase() === trimmedEmail ? existing.name : capitalizedName,
       email: trimmedEmail,
-      avatarUrl: existing?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+      avatarUrl: existing?.email?.toLowerCase() === trimmedEmail ? this.sanitizeAvatar(existing?.avatarUrl) : undefined,
       currency: existing?.currency || 'PKR',
       isPro: true,
-      memberSince: existing?.memberSince || 'September 2026',
+      memberSince: existing?.memberSince || currentMonthYear,
       notificationsEnabled: true,
       reminderLeadTimes: [30, 14, 7, 1],
     };
@@ -96,14 +113,15 @@ class AuthService {
       this.saveCredentials(creds);
     }
 
+    const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     const user: UserProfile = {
       id: `user-${Date.now()}`,
       name: trimmedName,
       email: trimmedEmail,
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+      avatarUrl: undefined,
       currency: 'PKR',
       isPro: true,
-      memberSince: 'September 2026',
+      memberSince: currentMonthYear,
       notificationsEnabled: true,
       reminderLeadTimes: [30, 14, 7, 1],
     };
@@ -117,10 +135,11 @@ class AuthService {
 
   public async loginWithGoogle(googleUser?: { name?: string; email?: string; avatarUrl?: string }): Promise<UserProfile> {
     await new Promise((r) => setTimeout(r, 200));
-    const finalEmail = (googleUser?.email || 'abdullah.khan@gmail.com').trim().toLowerCase();
-    const finalName = (googleUser?.name || 'Abdullah Khan').trim();
-    const finalAvatar = googleUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName)}&background=4285F4&color=fff&bold=true`;
+    const finalEmail = (googleUser?.email || 'user@gmail.com').trim().toLowerCase();
+    const finalName = (googleUser?.name || 'Google User').trim();
+    const finalAvatar = this.sanitizeAvatar(googleUser?.avatarUrl);
 
+    const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     const existing = storageService.getItem<UserProfile>(STORAGE_KEYS.USER);
     const user: UserProfile = {
       id: existing?.id || `user-google-${Date.now()}`,
@@ -129,7 +148,7 @@ class AuthService {
       avatarUrl: finalAvatar,
       currency: existing?.currency || 'PKR',
       isPro: true,
-      memberSince: existing?.memberSince || 'September 2026',
+      memberSince: existing?.memberSince || currentMonthYear,
       notificationsEnabled: true,
       reminderLeadTimes: [30, 14, 7, 1],
     };

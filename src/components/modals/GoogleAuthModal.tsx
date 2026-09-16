@@ -47,7 +47,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
       await onSelectAccount({
         name: account.name,
         email: account.email,
-        avatarUrl: account.avatarUrl || googleAuthService.getAvatarForName(account.name, account.email),
+        avatarUrl: account.avatarUrl || '',
       });
       onClose();
     } catch {
@@ -72,7 +72,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
     const newAccount: GoogleUserProfile = {
       name: capitalizedName,
       email: finalEmail,
-      avatarUrl: googleAuthService.getAvatarForName(capitalizedName, finalEmail),
+      avatarUrl: '',
     };
 
     setSelectingEmail(finalEmail);

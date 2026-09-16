@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShieldCheck, Sparkles, Heart, ExternalLink, Code2 } from 'lucide-react';
+import { X, ShieldCheck, Clock, Receipt, BellRing, Sparkles, CheckCircle2 } from 'lucide-react';
 import { THEME } from '../../constants/theme';
 import { ClaimVaultLogo } from '../ui/ClaimVaultLogo';
 
@@ -19,74 +19,107 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 100 }}
-          className="w-full max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-float border border-brand-border flex flex-col text-center"
+          className="w-full max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-float border border-brand-border flex flex-col max-h-[85vh] overflow-y-auto no-scrollbar"
         >
           {/* Close button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end -mt-1 -mr-1 mb-1">
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-brand-navy flex items-center justify-center transition"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-brand-navy flex items-center justify-center transition active:scale-95"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Logo & Brand */}
-          <div className="flex flex-col items-center -mt-2 mb-4">
-            <ClaimVaultLogo size="lg" className="mb-2" />
+          {/* Logo & Brand Header */}
+          <div className="flex flex-col items-center mb-4">
+            <ClaimVaultLogo size="lg" className="mb-2.5" />
 
-            <h3 className="text-lg font-extrabold text-brand-navy tracking-tight">
+            <h3 className="text-xl font-extrabold text-brand-navy tracking-tight">
               {THEME.app.name}
             </h3>
-            <span className="text-[11px] font-bold text-brand-teal px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 mt-1">
-              Version 1.0.0
-            </span>
+            <p className="text-xs font-bold text-brand-teal mt-0.5">
+              Personal Purchase & Warranty Vault
+            </p>
           </div>
 
-          {/* Value Prop */}
-          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 mb-4 text-xs text-brand-navy font-semibold leading-relaxed">
-            <span className="text-brand-teal font-extrabold block text-sm mb-1">
-              "{THEME.app.tagline}"
-            </span>
-            <span>
-              The personal purchase vault that secures your receipts, return deadlines, and warranty rights in one unified place.
-            </span>
+          {/* Mission & Purpose */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 mb-4 text-left">
+            <p className="text-xs font-bold text-brand-navy mb-1">
+              Never Miss a Deadline or Claim
+            </p>
+            <p className="text-[11px] text-brand-muted leading-relaxed">
+              ClaimVault helps you safeguard your purchases by storing digital receipts, tracking return periods with live countdowns, and delivering timely reminders before warranty coverage expires.
+            </p>
           </div>
 
-          {/* Feature Highlights */}
-          <div className="space-y-2 mb-5 text-left text-xs text-brand-navy">
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-sm">
-              <div className="w-6 h-6 rounded-lg bg-teal-50 text-brand-teal flex items-center justify-center shrink-0">
-                <Sparkles className="w-3.5 h-3.5" />
+          {/* Core Product Capabilities */}
+          <div className="space-y-2.5 mb-5 text-left">
+            <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 px-1">
+              Key Vault Features
+            </h4>
+
+            {/* Feature 1 */}
+            <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 text-brand-teal flex items-center justify-center shrink-0 mt-0.5">
+                <Clock className="w-4 h-4" />
               </div>
-              <span className="font-semibold text-[11px]">Dynamic Urgency & Countdown Engine</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-brand-navy">Return & Warranty Countdowns</p>
+                <p className="text-[11px] text-brand-muted leading-tight mt-0.5">
+                  Live urgency indicators showing exact days remaining for returns and repairs.
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-sm">
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 text-brand-green flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5" />
+            {/* Feature 2 */}
+            <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                <Receipt className="w-4 h-4" />
               </div>
-              <span className="font-semibold text-[11px]">Local Encrypted Digital Receipt Storage</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-brand-navy">Digital Receipt Storage</p>
+                <p className="text-[11px] text-brand-muted leading-tight mt-0.5">
+                  Keep high-resolution photos of invoices and receipts ready for warranty claims.
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 shadow-sm">
-              <div className="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <Code2 className="w-3.5 h-3.5" />
+            {/* Feature 3 */}
+            <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                <BellRing className="w-4 h-4" />
               </div>
-              <span className="font-semibold text-[11px]">React Native & TypeScript Architecture</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-brand-navy">Proactive Device Alerts</p>
+                <p className="text-[11px] text-brand-muted leading-tight mt-0.5">
+                  Automated reminders delivered before your return windows close.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-brand-green flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-brand-navy">Private Vault Protection</p>
+                <p className="text-[11px] text-brand-muted leading-tight mt-0.5">
+                  Your purchase records remain secure, encrypted, and in your full control.
+                </p>
+              </div>
             </div>
           </div>
 
-          <p className="text-[10px] text-brand-muted mb-4">
-            Designed and engineered with strict fintech security standards.
-          </p>
-
+          {/* Close Button */}
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-brand-navy text-white text-xs font-bold hover:bg-slate-800 transition active:scale-95 shadow-sm"
+            className="w-full py-3 rounded-2xl bg-brand-navy text-white text-xs font-bold hover:bg-slate-800 transition active:scale-98 shadow-sm"
           >
-            Close
+            Back to Profile
           </button>
         </motion.div>
       </div>

@@ -8,14 +8,17 @@ import {
   Upload, 
   RotateCcw, 
   KeyRound, 
-  Database, 
-  FileCheck, 
   HardDrive,
-  Cloud
+  FileCheck,
+  EyeOff,
+  CheckCircle2,
+  Trash2
 } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { storageService } from '../../services/storageService';
+import { biometricService } from '../../services/biometricService';
 import { Button } from '../ui/Button';
 
 interface PrivacyModalProps {
@@ -24,24 +27,26 @@ interface PrivacyModalProps {
 }
 
 export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
-  const { products, restoreDefaults } = useProducts();
+  const { user } = useAuth();
+  const { products, restoreDefaults, clearAllProducts } = useProducts();
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [biometricEnabled, setBiometricEnabled] = useState(true);
+  const [biometricEnabled, setBiometricEnabled] = useState(() => biometricService.isEnabled());
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   if (!isOpen) return null;
 
-  const usageStats = storageService.getStorageUsage();
+  const usageStats = storageService.getStorageUsage(products);
 
   const handleExportJSON = () => {
-    const backup = storageService.exportVaultData();
+    const backup = storageService.exportVaultData(products, user);
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `claimvault_vault_backup_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `claimvault_backup_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -56,7 +61,8 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string;
-        const success = storageService.importVaultData(content);
+        const userKey = user?.email ? user.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_') : undefined;
+        const success = storageService.importVaultData(content, userKey);
         if (success) {
           showToast('Vault backup imported successfully. Reloading...', 'success');
           setTimeout(() => {
@@ -78,6 +84,16 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
     await restoreDefaults();
     setIsResetting(false);
     setShowResetConfirm(false);
+    showToast('Sample products restored', 'info');
+    onClose();
+  };
+
+  const handleConfirmClear = async () => {
+    if (clearAllProducts) {
+      await clearAllProducts();
+    }
+    setShowClearConfirm(false);
+    showToast('Vault cleared completely', 'info');
     onClose();
   };
 
@@ -107,172 +123,140 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               </div>
               <div>
                 <h3 className="text-sm font-bold text-brand-navy">Privacy & Vault Storage</h3>
-                <p className="text-[11px] text-brand-muted">Cloud S3 & local persistence (Phase 12)</p>
+                <p className="text-[11px] text-brand-muted">Data protection & local encryption</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-brand-navy flex items-center justify-center transition"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-brand-navy flex items-center justify-center transition active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-3 space-y-3">
-            {/* Cloud S3 Object Storage & Quota Card (Phase 12) */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-teal-950 text-white space-y-2.5 shadow-sm border border-brand-teal/40">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Cloud className="w-4 h-4 text-brand-teal-light" />
-                  <span className="text-xs font-bold text-white">S3 Cloud Receipt Vault</span>
-                </div>
-                <span className="text-[10px] font-extrabold text-teal-300 bg-brand-teal/20 border border-brand-teal/40 px-2 py-0.5 rounded-md">
-                  Phase 12 Storage
-                </span>
+          <div className="flex-1 overflow-y-auto py-3 space-y-3.5 no-scrollbar">
+            {/* Privacy & Security Guarantees Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-navy via-slate-900 to-teal-950 text-white space-y-3 shadow-sm border border-brand-teal/30">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-brand-teal-light" />
+                <span className="text-xs font-bold text-white">Your Privacy Guarantee</span>
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-slate-300">Quota Usage (500 MB limit)</span>
-                  <span className="text-teal-300 font-extrabold">3.9 MB / 500 MB (1%)</span>
+              <div className="space-y-2 text-[11px] text-slate-200 leading-relaxed">
+                <div className="flex items-start gap-2">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3 h-3" />
+                  </div>
+                  <span><strong>100% Private:</strong> Your receipts, purchase prices, and warranties are never shared or sold to advertisers.</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full bg-brand-teal rounded-full w-[2%]" />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[10px] bg-white/5 p-2 rounded-xl border border-white/10 text-slate-300">
-                <div>
-                  <span className="text-slate-400 block">Encryption</span>
-                  <span className="font-bold text-emerald-400">AES-256 at Rest</span>
+                <div className="flex items-start gap-2">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3 h-3" />
+                  </div>
+                  <span><strong>Encrypted Vault:</strong> Digital receipts and purchase records are isolated and protected securely on your device.</span>
                 </div>
-                <div>
-                  <span className="text-slate-400 block">Access Control</span>
-                  <span className="font-bold text-teal-300">Private Signed URLs</span>
+
+                <div className="flex items-start gap-2">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3 h-3" />
+                  </div>
+                  <span><strong>Offline Access:</strong> All saved items, serial numbers, and deadline countdowns remain accessible without internet.</span>
                 </div>
               </div>
             </div>
 
-            {/* Backend REST API & Cloud Sync Card (Phase 11) */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-brand-navy to-slate-900 text-white space-y-2.5 shadow-sm border border-brand-teal/30">
+            {/* Storage Footprint & Usage Overview */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-teal-400" />
-                  <span className="text-xs font-bold text-white">PostgreSQL Backend API</span>
+                  <HardDrive className="w-4 h-4 text-brand-teal" />
+                  <span className="text-xs font-bold text-brand-navy">Vault Storage Usage</span>
                 </div>
-                <span className="text-[10px] font-extrabold text-teal-300 bg-brand-teal/20 border border-brand-teal/40 px-2 py-0.5 rounded-md">
-                  Phase 11
+                <span className="text-[10px] font-bold text-brand-teal bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md">
+                  Active Vault
                 </span>
               </div>
 
-              <div className="flex items-center justify-between bg-white/10 px-3 py-2 rounded-xl border border-white/10 text-[11px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-slate-200 font-medium">REST Endpoints Active</span>
+              <div className="grid grid-cols-3 gap-2 text-center py-2 bg-white rounded-xl border border-slate-200/70 shadow-sm">
+                <div>
+                  <span className="text-[10px] text-brand-muted block font-medium">Storage Size</span>
+                  <span className="text-xs font-extrabold text-brand-navy">{usageStats.usedFormatted}</span>
                 </div>
-                <span className="text-[10px] text-teal-300 font-bold">Node.js • JWT Auth</span>
-              </div>
-            </div>
-
-            {/* Security Audit Matrix Card (Phase 13) */}
-            <div className="p-3.5 rounded-2xl bg-emerald-950/90 text-white space-y-2 border border-emerald-500/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold text-white">Security & Privacy Matrix</span>
+                <div>
+                  <span className="text-[10px] text-brand-muted block font-medium">Saved Items</span>
+                  <span className="text-xs font-extrabold text-brand-navy">{usageStats.productsCount}</span>
                 </div>
-                <span className="text-[10px] font-extrabold text-emerald-300 bg-emerald-900/80 px-2 py-0.5 rounded-md border border-emerald-500/40">
-                  Phase 13 Verified
-                </span>
-              </div>
-
-              <div className="space-y-1 text-[11px] text-emerald-200/90">
-                <div className="flex items-center justify-between">
-                  <span>• Rate Limiter (Brute-Force Guard)</span>
-                  <span className="font-bold text-emerald-400">Active</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>• Zero-Trust Access Isolation</span>
-                  <span className="font-bold text-emerald-400">Enforced</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>• XSS Payload Sanitizer</span>
-                  <span className="font-bold text-emerald-400">Enabled</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>• Signed URL TTL (15 Min Expiry)</span>
-                  <span className="font-bold text-emerald-400">Active</span>
+                <div>
+                  <span className="text-[10px] text-brand-muted block font-medium">Receipts</span>
+                  <span className="text-xs font-extrabold text-brand-teal">{usageStats.receiptsCount}</span>
                 </div>
               </div>
             </div>
 
-            {/* Storage Footprint & Encryption Card */}
-            <div className="p-3.5 rounded-2xl bg-slate-900 text-white space-y-2.5 shadow-sm">
+            {/* Biometric Security Lock */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-teal-400" />
-                  <span className="text-xs font-bold text-white">Local Vault Storage</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-navy flex items-center justify-center shadow-sm">
+                    <KeyRound className="w-4 h-4 text-brand-teal" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-brand-navy">Biometric App Lock</h4>
+                    <p className="text-[10px] text-brand-muted">Require FaceID / TouchID / Windows Hello</p>
+                  </div>
                 </div>
-                <span className="text-[10px] font-extrabold text-teal-300 bg-white/10 px-2 py-0.5 rounded-md">
-                  Offline-First Cache
-                </span>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center py-1 bg-white/5 rounded-xl border border-white/10">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Footprint</span>
-                  <span className="text-xs font-extrabold text-teal-300">{usageStats.usedFormatted}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Products</span>
-                  <span className="text-xs font-extrabold text-white">{usageStats.productsCount}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Receipts</span>
-                  <span className="text-xs font-extrabold text-emerald-300">{usageStats.receiptsCount}</span>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                All data, receipts, and reminder configurations are strictly stored in local device storage and retained between sessions.
-              </p>
-            </div>
-
-            {/* Biometric App Lock simulation */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-navy flex items-center justify-center">
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-brand-navy">Biometric App Lock</h4>
-                  <p className="text-[10px] text-brand-muted">Require FaceID / Fingerprint on launch</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setBiometricEnabled(!biometricEnabled);
-                  showToast(!biometricEnabled ? 'Biometric security enabled' : 'Biometric security disabled', 'info');
-                }}
-                className={`w-10 h-5 rounded-full transition-colors relative ${
-                  biometricEnabled ? 'bg-brand-teal' : 'bg-slate-300'
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-transform ${
-                    biometricEnabled ? 'right-0.5' : 'left-0.5'
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const nextState = !biometricEnabled;
+                    if (nextState) {
+                      await biometricService.registerBiometrics(user?.email || 'user@claimvault.pk');
+                      biometricService.setEnabled(true);
+                      setBiometricEnabled(true);
+                      showToast('Biometric lock enabled on this device', 'success');
+                    } else {
+                      biometricService.setEnabled(false);
+                      setBiometricEnabled(false);
+                      showToast('Biometric lock disabled', 'info');
+                    }
+                  }}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                    biometricEnabled ? 'bg-brand-teal' : 'bg-slate-300'
                   }`}
-                />
-              </button>
+                >
+                  <div
+                    className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-transform ${
+                      biometricEnabled ? 'right-0.5' : 'left-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {biometricEnabled && (
+                <div className="pt-1 flex items-center justify-between border-t border-slate-200/60">
+                  <span className="text-[10px] text-brand-muted">Device PIN Fallback: <strong>1234</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      biometricService.setSessionUnlocked(false);
+                      window.location.reload();
+                    }}
+                    className="text-[10px] font-bold text-brand-teal hover:underline flex items-center gap-1"
+                  >
+                    <Lock className="w-3 h-3" />
+                    <span>Test Lock Now</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Export Vault Backup */}
             <button
               type="button"
               onClick={handleExportJSON}
-              className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/50 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
+              className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/60 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-teal flex items-center justify-center shadow-sm">
@@ -280,7 +264,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-brand-navy">Export Vault Backup (JSON)</h4>
-                  <p className="text-[10px] text-brand-muted">Download complete offline snapshot</p>
+                  <p className="text-[10px] text-brand-muted">Download complete offline snapshot file</p>
                 </div>
               </div>
             </button>
@@ -289,23 +273,23 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/50 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
+              className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/60 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-navy flex items-center justify-center shadow-sm">
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-4 h-4 text-brand-teal" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-brand-navy">Import Vault Backup (JSON)</h4>
-                  <p className="text-[10px] text-brand-muted">Restore products & receipts from file</p>
+                  <p className="text-[10px] text-brand-muted">Restore products & receipts from backup</p>
                 </div>
               </div>
             </button>
 
-            {/* Reset Vault Defaults */}
+            {/* Load Sample Products */}
             {showResetConfirm ? (
-              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-center space-y-2">
-                <p className="text-xs font-bold text-brand-red">Reset all data to default samples?</p>
+              <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 text-center space-y-2">
+                <p className="text-xs font-bold text-brand-navy">Load fresh sample products into vault?</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -316,13 +300,13 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
                     Cancel
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="action"
                     size="sm"
                     fullWidth
                     isLoading={isResetting}
                     onClick={handleConfirmReset}
                   >
-                    Yes, Reset
+                    Load Samples
                   </Button>
                 </div>
               </div>
@@ -330,15 +314,15 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(true)}
-                className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-rose-50/60 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
+                className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/60 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-muted flex items-center justify-center shadow-sm">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-teal flex items-center justify-center shadow-sm">
                     <RotateCcw className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-brand-navy">Reset Vault Defaults</h4>
-                    <p className="text-[10px] text-brand-muted">Reload clean catalog samples</p>
+                    <h4 className="text-xs font-bold text-brand-navy">Load Sample Demo Items</h4>
+                    <p className="text-[10px] text-brand-muted">Populate vault with demonstrative items</p>
                   </div>
                 </div>
               </button>
@@ -348,7 +332,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl border border-brand-border text-brand-navy text-xs font-bold hover:bg-slate-50 transition shrink-0"
+            className="w-full py-2.5 rounded-xl border border-brand-border text-brand-navy text-xs font-bold hover:bg-slate-50 transition shrink-0 mt-1"
           >
             Close
           </button>

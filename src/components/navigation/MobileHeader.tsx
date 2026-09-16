@@ -23,10 +23,17 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   rightAction,
   onOpenNotifications,
   isDashboard = false,
-  userName = 'Abdullah',
+  userName = 'User',
   className = '',
 }) => {
   const { unreadCount } = useNotifications();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   if (isDashboard) {
     return (
@@ -39,7 +46,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           />
           <div>
             <h1 className="text-lg font-extrabold text-brand-navy tracking-tight leading-tight">
-              Good morning, {userName}
+              {getGreeting()}, {userName}
             </h1>
             <p className="text-[11px] font-medium text-brand-muted mt-0.5">
               Keep your purchases protected.

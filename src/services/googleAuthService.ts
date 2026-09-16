@@ -27,7 +27,7 @@ export function decodeGoogleJwt(credential: string): GoogleUserProfile | null {
     return {
       name: data.name || data.given_name || 'Google User',
       email: data.email,
-      avatarUrl: data.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'User')}&background=4285F4&color=fff&bold=true`,
+      avatarUrl: data.picture || '',
       sub: data.sub,
     };
   } catch {
@@ -217,7 +217,7 @@ class GoogleAuthService {
             const profile: GoogleUserProfile = {
               name: data.name || data.given_name || 'Google User',
               email: data.email,
-              avatarUrl: data.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'User')}&background=4285F4&color=fff&bold=true`,
+              avatarUrl: data.picture || '',
               sub: data.sub,
             };
 

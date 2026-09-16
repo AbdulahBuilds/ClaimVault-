@@ -28,7 +28,7 @@ interface NotificationContextType {
     item: Omit<PushNotificationItem, 'id' | 'timestamp' | 'isRead' | 'status'>,
     sendToDevice?: boolean
   ) => Promise<boolean>;
-  sendSampleNotification: (type?: 'return' | 'warranty') => Promise<void>;
+  sendSampleNotification: () => Promise<void>;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
@@ -175,27 +175,17 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     [preferences]
   );
 
-  // Send a realistic sample notification to test OS/Device integration
+  // Send a clean test notification to verify OS/Device push integration
   const sendSampleNotification = useCallback(
-    async (type: 'return' | 'warranty' = 'return') => {
-      const sampleItem =
-        type === 'return'
-          ? {
-              productName: 'Samsung Galaxy A55',
-              title: 'Return Window Notice',
-              body: 'Samsung Galaxy A55 return period ends tomorrow. Inspect items if you plan to return.',
-              type: 'return' as const,
-              leadTimeDays: 1,
-            }
-          : {
-              productName: 'Dell Laptop',
-              title: 'Warranty Expiry Alert',
-              body: 'Dell Laptop warranty expires in 7 days. Check hardware before coverage ends.',
-              type: 'warranty' as const,
-              leadTimeDays: 7,
-            };
+    async () => {
+      const sampleItem = {
+        productName: 'ClaimVault Alert',
+        title: 'Test Push Notification',
+        body: 'This is a test notification. Your device is ready to receive return & warranty alerts.',
+        type: 'system' as const,
+      };
 
-      const deviceDelivered = await triggerPushNotification(sampleItem, true);
+      await triggerPushNotification(sampleItem, true);
       const perm = deviceNotificationService.getPermissionStatus();
 
       if (perm === 'granted') {
@@ -207,7 +197,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           5000
         );
       } else {
-        showToast('Sample notification triggered.', 'info', 2500);
+        showToast('Test notification triggered.', 'info', 2500);
       }
     },
     [triggerPushNotification, showToast]

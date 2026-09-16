@@ -24,6 +24,8 @@ import { ProfileScreen } from './screens/ProfileScreen';
 import { NotificationsModal } from './components/modals/NotificationsModal';
 import { NotificationPermissionModal } from './components/modals/NotificationPermissionModal';
 import { AIScannerModal } from './components/modals/AIScannerModal';
+import { BiometricLockScreen } from './components/auth/BiometricLockScreen';
+import { biometricService } from './services/biometricService';
 import { ExtractedReceiptData } from './services/aiScannerService';
 
 type AppView = 
@@ -44,6 +46,11 @@ const AppNavigator: React.FC = () => {
     closePermissionModal, 
     requestPermission 
   } = useNotifications();
+
+  // Biometric App Lock State
+  const [isVaultLocked, setIsVaultLocked] = useState(() => {
+    return biometricService.isEnabled() && !biometricService.isUnlocked();
+  });
 
   // Navigation State
   const [currentView, setCurrentView] = useState<AppView>(() => {
@@ -207,9 +214,6 @@ const AppNavigator: React.FC = () => {
                   onLogout={() => {
                     setCurrentView('login');
                   }}
-                  onReplayOnboarding={() => {
-                    setCurrentView('onboarding');
-                  }}
                 />
               )}
             </>
@@ -260,6 +264,15 @@ const AppNavigator: React.FC = () => {
             setCurrentView('main');
           }}
         />
+
+        {/* Biometric & Device Security Lock Screen */}
+        {isVaultLocked && (
+          <BiometricLockScreen
+            onUnlock={() => {
+              setIsVaultLocked(false);
+            }}
+          />
+        )}
       </div>
     </MobileDeviceFrame>
   );

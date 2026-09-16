@@ -39,9 +39,7 @@ class NotificationService {
     if (notifs && Array.isArray(notifs)) {
       return notifs;
     }
-    const initial = this.generateInitialNotifications();
-    storageService.setItem(STORAGE_KEYS.NOTIFICATIONS, initial);
-    return initial;
+    return [];
   }
 
   public saveNotifications(items: PushNotificationItem[]): void {

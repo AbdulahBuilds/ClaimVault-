@@ -130,7 +130,7 @@ class StorageService {
   /**
    * Calculate exact storage footprint across all ClaimVault keys
    */
-  public getStorageUsage(): StorageUsageStats {
+  public getStorageUsage(userProducts?: Product[]): StorageUsageStats {
     let totalBytes = 0;
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -146,7 +146,9 @@ class StorageService {
       console.warn('[StorageService] Error calculating storage usage', e);
     }
 
-    const products = this.getItem<Product[]>(STORAGE_KEYS.PRODUCTS, []) || [];
+    const products = userProducts !== undefined 
+      ? userProducts 
+      : (this.getItem<Product[]>(STORAGE_KEYS.PRODUCTS, []) || []);
     const receiptsCount = products.filter((p) => !!p.receipt).length;
     const dismissed = this.getItem<string[]>(STORAGE_KEYS.DISMISSED_REMINDERS, []) || [];
 
@@ -170,9 +172,11 @@ class StorageService {
   /**
    * Generates a complete standalone JSON export of all vault data
    */
-  public exportVaultData(): CompleteVaultBackup {
-    const products = this.getItem<Product[]>(STORAGE_KEYS.PRODUCTS, []) || [];
-    const user = this.getItem<UserProfile>(STORAGE_KEYS.USER, null);
+  public exportVaultData(activeProducts?: Product[], activeUser?: UserProfile | null): CompleteVaultBackup {
+    const user = activeUser !== undefined ? activeUser : this.getItem<UserProfile>(STORAGE_KEYS.USER, null);
+    const userKey = user?.email ? user.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_') : null;
+    const productsKey = userKey ? `${STORAGE_KEYS.PRODUCTS}_${userKey}` : STORAGE_KEYS.PRODUCTS;
+    const products = activeProducts || this.getItem<Product[]>(productsKey, []) || this.getItem<Product[]>(STORAGE_KEYS.PRODUCTS, []) || [];
     const dismissedReminders = this.getItem<string[]>(STORAGE_KEYS.DISMISSED_REMINDERS, []) || [];
     const notifications = this.getItem<PushNotificationItem[]>(STORAGE_KEYS.NOTIFICATIONS, []) || [];
     const preferences = this.getItem<NotificationPreferences>(STORAGE_KEYS.PREFERENCES, null);
@@ -201,7 +205,7 @@ class StorageService {
   /**
    * Imports a complete vault backup JSON string with integrity and security sanitization
    */
-  public importVaultData(jsonString: string): boolean {
+  public importVaultData(jsonString: string, currentUserKey?: string): boolean {
     try {
       if (typeof jsonString !== 'string' || jsonString.length > 50 * 1024 * 1024) {
         throw new Error('Backup file exceeds maximum allowed size limit');
@@ -223,6 +227,13 @@ class StorageService {
         }));
 
       this.setItem(STORAGE_KEYS.PRODUCTS, validatedProducts);
+
+      if (currentUserKey) {
+        this.setItem(`${STORAGE_KEYS.PRODUCTS}_${currentUserKey}`, validatedProducts);
+      } else if (backup.user?.email) {
+        const uKey = backup.user.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
+        this.setItem(`${STORAGE_KEYS.PRODUCTS}_${uKey}`, validatedProducts);
+      }
 
       if (backup.user && typeof backup.user === 'object' && backup.user.email) {
         this.setItem(STORAGE_KEYS.USER, backup.user);

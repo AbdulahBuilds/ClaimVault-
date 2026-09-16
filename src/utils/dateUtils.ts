@@ -1,14 +1,11 @@
 import { UrgencyStatus } from '../types';
 
-// Reference date for consistent prototype calculations if system clock differs, defaults to current time
-const CURRENT_DATE = new Date('2026-09-14T00:00:00');
-
 export function getNow(): Date {
-  return CURRENT_DATE;
+  return new Date();
 }
 
 /**
- * Format date into "12 Sep 2026"
+ * Format date into "16 Sep 2026"
  */
 export function formatDate(dateString: string | Date): string {
   if (!dateString) return '—';
@@ -23,7 +20,7 @@ export function formatDate(dateString: string | Date): string {
 }
 
 /**
- * Format relative date (e.g. "Purchased: 12 Sep 2026")
+ * Format relative date (e.g. "16 Sep")
  */
 export function formatShortDate(dateString: string): string {
   if (!dateString) return '—';
@@ -39,7 +36,7 @@ export function formatShortDate(dateString: string): string {
 /**
  * Calculate difference in calendar days between targetDate and reference date
  */
-export function getDaysDifference(targetDateString: string, refDate: Date = CURRENT_DATE): number {
+export function getDaysDifference(targetDateString: string, refDate: Date = getNow()): number {
   if (!targetDateString) return 0;
   const target = new Date(targetDateString);
   if (isNaN(target.getTime())) return 0;
@@ -58,7 +55,7 @@ export function getDaysDifference(targetDateString: string, refDate: Date = CURR
  * - Expiring: 0 - 30 days
  * - Safe: > 30 days
  */
-export function calculateUrgency(targetDateString: string, refDate: Date = CURRENT_DATE): UrgencyStatus {
+export function calculateUrgency(targetDateString: string, refDate: Date = getNow()): UrgencyStatus {
   const days = getDaysDifference(targetDateString, refDate);
   if (days < 0) return 'expired';
   if (days <= 30) return 'expiring';
@@ -67,9 +64,9 @@ export function calculateUrgency(targetDateString: string, refDate: Date = CURRE
 
 /**
  * Human-friendly countdown description
- * e.g., "5 days remaining", "Ends tomorrow", "18 days remaining", "11 months remaining", "Expired 12 days ago"
+ * e.g., "5 days remaining", "Expires tomorrow", "18 days remaining", "11 months remaining", "Expired 12 days ago"
  */
-export function formatRemainingTime(targetDateString: string, refDate: Date = CURRENT_DATE): string {
+export function formatRemainingTime(targetDateString: string, refDate: Date = getNow()): string {
   const days = getDaysDifference(targetDateString, refDate);
 
   if (days < 0) {
@@ -122,7 +119,7 @@ export function addMonthsToDate(dateString: string, months: number): string {
 /**
  * Calculate percentage progress between start date and end date
  */
-export function getTimelineProgress(startDateString: string, endDateString: string, refDate: Date = CURRENT_DATE): number {
+export function getTimelineProgress(startDateString: string, endDateString: string, refDate: Date = getNow()): number {
   const start = new Date(startDateString).getTime();
   const end = new Date(endDateString).getTime();
   const current = refDate.getTime();

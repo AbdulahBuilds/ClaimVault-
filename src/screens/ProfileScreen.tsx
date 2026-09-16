@@ -9,10 +9,11 @@ import {
   Shield, 
   Download, 
   Check,
-  Sparkles,
   Edit3,
   Lock,
-  UserCheck
+  UserCheck,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProducts } from '../context/ProductContext';
@@ -31,11 +32,10 @@ import { AboutModal } from '../components/modals/AboutModal';
 
 interface ProfileScreenProps {
   onLogout: () => void;
-  onReplayOnboarding?: () => void;
 }
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplayOnboarding }) => {
-  const { user, logout, resetOnboarding } = useAuth();
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
+  const { user, logout } = useAuth();
   const { stats } = useProducts();
   const { 
     preferences, 
@@ -72,13 +72,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
     }
   };
 
-  const handleReplayTour = () => {
-    resetOnboarding();
-    if (onReplayOnboarding) {
-      onReplayOnboarding();
-    }
-  };
-
   const handleConfirmLogout = async () => {
     await logout();
     showToast('Logged out successfully', 'info');
@@ -97,7 +90,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
             className="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer group"
           >
             <div className="relative">
-              <div className="w-16 h-16 rounded-3xl bg-brand-navy text-white flex items-center justify-center font-extrabold text-xl shadow-card overflow-hidden border border-slate-200 group-hover:scale-105 transition">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-navy via-slate-800 to-teal-800 text-white flex items-center justify-center font-extrabold text-2xl shadow-card overflow-hidden border border-slate-200 group-hover:scale-105 transition">
                 {user?.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
@@ -105,11 +98,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span>{(user?.name || 'U').charAt(0)}</span>
+                  <span>{(user?.name || 'U').charAt(0).toUpperCase()}</span>
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-brand-teal text-white flex items-center justify-center border-2 border-white">
-                <Check className="w-3 h-3 stroke-[3]" />
+              <div 
+                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-xl bg-brand-teal text-white flex items-center justify-center border-2 border-white shadow-sm group-hover:scale-110 transition"
+                title="Tap to upload photo or edit profile"
+              >
+                <Camera className="w-3.5 h-3.5" />
               </div>
             </div>
 
@@ -258,24 +254,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
                 })}
               </div>
 
-              {/* Test Notification Buttons */}
-              <div className="pt-2 grid grid-cols-2 gap-2">
+              {/* Test Notification Button */}
+              <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => sendSampleNotification('return')}
-                  className="py-2 px-2.5 rounded-xl bg-teal-50 hover:bg-teal-100/70 border border-teal-200 text-brand-teal text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
+                  onClick={() => sendSampleNotification()}
+                  className="w-full py-2.5 px-3 rounded-xl bg-teal-50 hover:bg-teal-100/70 border border-teal-200 text-brand-teal text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
                 >
                   <Bell className="w-3.5 h-3.5" />
-                  <span>Test Return Alert</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => sendSampleNotification('warranty')}
-                  className="py-2 px-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-brand-navy text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-brand-teal" />
-                  <span>Test Warranty Alert</span>
+                  <span>Send Test Push Notification</span>
                 </button>
               </div>
             </div>
@@ -334,26 +321,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
           </div>
         </div>
 
-        {/* Section 3: Support, Tour & About */}
+        {/* Section 3: Support & About */}
         <div className="bg-white rounded-2xl border border-brand-border shadow-card overflow-hidden">
           <div className="divide-y divide-slate-100">
-            {/* Replay Onboarding Tour */}
-            <div
-              onClick={handleReplayTour}
-              className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-teal-50 text-brand-teal flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-brand-navy">Replay Onboarding Tour</p>
-                  <p className="text-[11px] text-brand-muted">View introductory walkthrough</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-brand-muted" />
-            </div>
-
             {/* Help & Support */}
             <div
               onClick={() => setIsHelpOpen(true)}
@@ -384,11 +354,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout, onReplay
                 />
                 <div>
                   <p className="text-xs font-bold text-brand-navy">About {THEME.app.name}</p>
-                  <p className="text-[11px] text-brand-muted">Version 1.0.0 (Production Mobile Build)</p>
+                  <p className="text-[11px] text-brand-muted">Smart purchase & warranty manager</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">v1.0.0</span>
                 <ChevronRight className="w-4 h-4 text-brand-muted" />
               </div>
             </div>

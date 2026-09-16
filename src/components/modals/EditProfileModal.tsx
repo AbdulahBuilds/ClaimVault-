@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Camera, Check } from 'lucide-react';
+import { X, User, Mail, Camera, Upload, Trash2, Check, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { InputField } from '../ui/InputField';
@@ -11,23 +11,52 @@ interface EditProfileModalProps {
   onClose: () => void;
 }
 
-const AVATAR_PRESETS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-];
-
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) => {
   const { user, updateProfile } = useAuth();
   const { showToast } = useToast();
 
-  const [name, setName] = useState(user?.name || 'Abdullah');
-  const [email, setEmail] = useState(user?.email || 'abdullah@example.com');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || AVATAR_PRESETS[1]);
+  const [name, setName] = useState(user?.name || 'User');
+  const [email, setEmail] = useState(user?.email || 'user@example.com');
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user?.avatarUrl);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+
+  const initialLetter = (name.trim() || user?.name || 'U').charAt(0).toUpperCase();
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size should be under 5MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setAvatarUrl(result);
+        showToast('Photo uploaded! Click Save Profile to apply.', 'success', 2500);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setAvatarUrl(undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    showToast('Reset to initial letter', 'info', 2000);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +69,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     updateProfile({
       name: name.trim(),
       email: email.trim(),
-      avatarUrl,
+      avatarUrl: avatarUrl || undefined,
     });
     setIsSubmitting(false);
     showToast('Profile updated successfully', 'success');
@@ -58,7 +87,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-brand-border">
-            <h3 className="text-sm font-bold text-brand-navy">Edit Profile</h3>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 text-brand-teal flex items-center justify-center">
+                <User className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-bold text-brand-navy">Edit Profile</h3>
+            </div>
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-brand-navy flex items-center justify-center transition"
@@ -68,35 +102,56 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
-            {/* Avatar Selector */}
-            <div className="flex flex-col items-center gap-2.5">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-3xl bg-brand-navy overflow-hidden border-2 border-brand-teal shadow-card flex items-center justify-center">
+            {/* Avatar & Upload Section */}
+            <div className="flex flex-col items-center gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="image/*"
+                className="hidden"
+              />
+
+              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-brand-navy via-slate-800 to-teal-800 text-white flex items-center justify-center font-extrabold text-3xl shadow-card overflow-hidden border-2 border-brand-teal group-hover:scale-105 transition-transform duration-200">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-8 h-8 text-white" />
+                    <span>{initialLetter}</span>
                   )}
+                </div>
+
+                <div className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-2xl bg-brand-teal text-white flex items-center justify-center border-2 border-white shadow-md group-hover:bg-brand-teal-dark transition">
+                  <Camera className="w-4 h-4" />
                 </div>
               </div>
 
-              <span className="text-[11px] text-brand-muted font-medium">Choose an Avatar</span>
+              {/* Upload or Remove buttons */}
               <div className="flex items-center gap-2">
-                {AVATAR_PRESETS.map((preset, idx) => (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 text-brand-teal text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Photo</span>
+                </button>
+
+                {avatarUrl && (
                   <button
-                    key={idx}
                     type="button"
-                    onClick={() => setAvatarUrl(preset)}
-                    className={`w-9 h-9 rounded-2xl overflow-hidden border-2 transition active:scale-95 ${
-                      avatarUrl === preset
-                        ? 'border-brand-teal ring-2 ring-brand-teal/30 scale-105'
-                        : 'border-slate-200 hover:border-slate-300 opacity-70 hover:opacity-100'
-                    }`}
+                    onClick={handleRemovePhoto}
+                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-1.5 transition active:scale-95"
                   >
-                    <img src={preset} alt={`Preset ${idx}`} className="w-full h-full object-cover" />
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Use Initial</span>
                   </button>
-                ))}
+                )}
               </div>
+
+              <p className="text-[11px] text-brand-muted text-center">
+                {avatarUrl ? 'Custom profile photo uploaded' : `Displaying initial letter "${initialLetter}"`}
+              </p>
             </div>
 
             {/* Inputs */}

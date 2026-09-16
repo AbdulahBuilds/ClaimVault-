@@ -1,5 +1,5 @@
 import { Product } from '../types';
-import { INITIAL_PRODUCTS } from '../data/mockProducts';
+import { getSampleProducts } from '../data/mockProducts';
 import { storageService, STORAGE_KEYS } from './storageService';
 import { authService } from './authService';
 
@@ -81,8 +81,9 @@ class ProductService {
   }
 
   public async loadSampleData(userKey?: string): Promise<Product[]> {
-    this.saveProducts(INITIAL_PRODUCTS, userKey);
-    return INITIAL_PRODUCTS;
+    const samples = getSampleProducts();
+    this.saveProducts(samples, userKey);
+    return samples;
   }
 
   public async resetToDefault(userKey?: string): Promise<Product[]> {
