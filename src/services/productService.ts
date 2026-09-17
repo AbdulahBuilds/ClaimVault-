@@ -1,5 +1,4 @@
 import { Product } from '../types';
-import { getSampleProducts } from '../data/mockProducts';
 import { storageService, STORAGE_KEYS } from './storageService';
 import { authService } from './authService';
 import { cloudSyncService } from './cloudSyncService';
@@ -134,23 +133,6 @@ class ProductService {
     return true;
   }
 
-  public async loadSampleData(userKey?: string): Promise<Product[]> {
-    const samples = getSampleProducts();
-    const userEmail = this.getUserEmail(userKey);
-    this.saveProducts(samples, userKey);
-
-    if (userEmail) {
-      for (const sample of samples) {
-        cloudSyncService.syncProductToCloud(sample, userEmail).catch(() => {});
-      }
-    }
-
-    return samples;
-  }
-
-  public async resetToDefault(userKey?: string): Promise<Product[]> {
-    return this.loadSampleData(userKey);
-  }
 
   public async clearAll(userKey?: string): Promise<void> {
     const products = this.getStoredProducts(userKey);

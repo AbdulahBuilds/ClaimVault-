@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, ChevronRight, Calendar } from 'lucide-react';
 import { Reminder } from '../../types';
-import { formatPKR } from '../../utils/currencyUtils';
+import { formatProductPrice } from '../../utils/currencyUtils';
 import { formatDate } from '../../utils/dateUtils';
 import { triggerHaptic } from '../../utils/haptics';
 
@@ -137,7 +137,7 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
           </span>
           <span className="text-slate-300">•</span>
           <span className="text-brand-teal font-extrabold text-xs shrink-0">
-            {formatPKR(reminder.productPrice)}
+            {formatProductPrice(reminder.productPrice, reminder.productCurrency)}
           </span>
         </div>
 

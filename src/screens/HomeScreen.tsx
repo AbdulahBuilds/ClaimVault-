@@ -5,11 +5,12 @@ import {
   Clock, 
   AlertTriangle, 
   Sparkles, 
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
-import { formatPKR } from '../utils/currencyUtils';
+import { formatProductPrice, formatCurrency } from '../utils/currencyUtils';
 import { formatDate, getDaysDifference, getNow } from '../utils/dateUtils';
 import { Badge, CategoryBadge, AIComingSoonBadge } from '../components/ui/Badge';
 import { MobileHeader } from '../components/navigation/MobileHeader';
@@ -34,7 +35,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onOpenNotifications,
   onOpenAIScanner,
 }) => {
-  const { products, stats, setActiveFilter, loadSampleData } = useProducts();
+  const { products, stats, setActiveFilter } = useProducts();
   const { user } = useAuth();
   const { showToast } = useToast();
   const now = getNow();
@@ -166,28 +167,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         {/* AI Scanner Banner / Quick Action */}
         <div 
           onClick={() => {
-            triggerHaptic('light');
-            showToast('AI Receipt Scanner is coming soon! You can enter product details manually.', 'info');
+            triggerHaptic('medium');
             onOpenAIScanner();
           }}
-          className="p-4 rounded-2xl bg-gradient-to-r from-brand-navy via-slate-800 to-brand-navy text-white shadow-card flex items-center justify-between cursor-pointer hover:shadow-card-hover transition active:scale-[0.99] border border-amber-500/30 relative overflow-hidden group"
+          className="p-4 rounded-2xl bg-gradient-to-r from-brand-navy via-slate-800 to-teal-950 text-white shadow-card flex items-center justify-between cursor-pointer hover:shadow-card-hover transition active:scale-[0.99] border border-brand-teal/40 relative overflow-hidden group"
         >
-          <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/20 transition" />
+          <div className="absolute top-0 right-0 w-28 h-28 bg-brand-teal/20 rounded-full blur-xl pointer-events-none group-hover:bg-brand-teal/30 transition" />
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 group-hover:scale-105 transition">
-              <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-brand-teal/20 border border-brand-teal/40 flex items-center justify-center text-brand-teal-light group-hover:scale-105 transition shadow-glow-teal">
+              <Sparkles className="w-5 h-5 text-teal-300 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xs font-bold text-white">Scan Receipt with AI</h3>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                  Coming Soon
+                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-brand-teal text-white px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                  <Zap className="w-2.5 h-2.5 text-yellow-300" />
+                  Live AI
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 mt-0.5">Neural OCR invoice & receipt scanning in development</p>
+              <p className="text-[11px] text-slate-300 mt-0.5">Scan receipts to extract details instantly</p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-amber-300 relative z-10 group-hover:translate-x-0.5 transition" />
+          <ChevronRight className="w-5 h-5 text-teal-300 relative z-10 group-hover:translate-x-0.5 transition" />
         </div>
 
         {/* If Products Empty: Show Welcome & Quick Action Card */}
@@ -199,23 +200,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="space-y-1 max-w-xs mx-auto">
               <h3 className="text-base font-extrabold text-brand-navy">Your Vault is Empty</h3>
               <p className="text-xs text-brand-muted leading-relaxed">
-                Add your first receipt or invoice to track warranties and return windows automatically.
+                Add your receipts or invoices to track warranties and return windows.
               </p>
             </div>
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={onGoToAdd}
                 className="w-full py-3 px-4 rounded-xl bg-brand-teal hover:bg-teal-700 text-white text-xs font-bold shadow-sm transition active:scale-98 flex items-center justify-center gap-2"
               >
-                <span>+ Add Your First Product</span>
-              </button>
-              <button
-                type="button"
-                onClick={loadSampleData}
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-brand-navy text-xs font-bold transition active:scale-98"
-              >
-                <span>Load Sample Demo Items (12 Products)</span>
+                <span>+ Add Product</span>
               </button>
             </div>
           </div>
@@ -275,8 +269,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                               </h4>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 <CategoryBadge label={product.category} />
-                                <span className="text-[11px] text-brand-muted font-medium">
-                                  {formatPKR(product.price)}
+                                <span className="text-[11px] text-brand-teal font-bold">
+                                  {formatProductPrice(product.price, product.currency)}
                                 </span>
                               </div>
                             </div>

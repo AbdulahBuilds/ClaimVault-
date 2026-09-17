@@ -9,21 +9,7 @@ interface CurrencyModalProps {
   onClose: () => void;
 }
 
-interface CurrencyOption {
-  code: string;
-  name: string;
-  symbol: string;
-  country: string;
-}
-
-const CURRENCIES: CurrencyOption[] = [
-  { code: 'PKR', name: 'Pakistani Rupee', symbol: 'Rs.', country: 'Pakistan (Default)' },
-  { code: 'USD', name: 'US Dollar', symbol: '$', country: 'United States' },
-  { code: 'EUR', name: 'Euro', symbol: '€', country: 'European Union' },
-  { code: 'GBP', name: 'British Pound', symbol: '£', country: 'United Kingdom' },
-  { code: 'AED', name: 'UAE Dirham', symbol: 'AED', country: 'United Arab Emirates' },
-  { code: 'SAR', name: 'Saudi Riyal', symbol: 'SAR', country: 'Saudi Arabia' },
-];
+import { CURRENCY_LIST } from '../../utils/currencyUtils';
 
 export const CurrencyModal: React.FC<CurrencyModalProps> = ({ isOpen, onClose }) => {
   const { user, updateProfile } = useAuth();
@@ -56,7 +42,7 @@ export const CurrencyModal: React.FC<CurrencyModalProps> = ({ isOpen, onClose })
               </div>
               <div>
                 <h3 className="text-sm font-bold text-brand-navy">Display Currency</h3>
-                <p className="text-[11px] text-brand-muted">Select your default pricing unit</p>
+                <p className="text-[11px] text-brand-muted">Auto-converts vault values & product prices</p>
               </div>
             </div>
             <button
@@ -69,7 +55,7 @@ export const CurrencyModal: React.FC<CurrencyModalProps> = ({ isOpen, onClose })
 
           {/* Currencies List */}
           <div className="divide-y divide-slate-100 py-3 max-h-[60vh] overflow-y-auto">
-            {CURRENCIES.map((c) => {
+            {CURRENCY_LIST.map((c) => {
               const isSelected = currentCurrency === c.code;
               return (
                 <button

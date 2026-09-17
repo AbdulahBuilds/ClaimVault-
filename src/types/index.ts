@@ -80,6 +80,7 @@ export interface Reminder {
   timeBucket: 'today' | 'this_week' | 'later';
   isCompleted: boolean;
   productPrice: number;
+  productCurrency?: string;
   imageUrl?: string;
   ruleLabel?: string;
 }

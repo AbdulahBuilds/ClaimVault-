@@ -67,11 +67,13 @@ export const CategoryBadge: React.FC<{ label: string; className?: string }> = ({
   );
 };
 
-export const AIComingSoonBadge: React.FC<{ className?: string }> = ({ className = '' }) => {
+export const AIPoweredBadge: React.FC<{ label?: string; className?: string }> = ({ label = 'AI Vision', className = '' }) => {
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-teal text-white shadow-sm ${className}`}>
-      <Sparkles className="w-3 h-3 text-teal-200" />
-      <span>Coming Soon</span>
+    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-teal text-white shadow-sm ${className}`}>
+      <Sparkles className="w-3 h-3 text-teal-200 animate-pulse" />
+      <span>{label}</span>
     </span>
   );
 };
+
+export const AIComingSoonBadge = AIPoweredBadge;

@@ -7,7 +7,6 @@ interface ReceiptOptionsModalProps {
   onClose: () => void;
   onTakePhoto: () => void;
   onSelectGallery: () => void;
-  onSelectSample: () => void;
   title?: string;
   subtitle?: string;
 }
@@ -17,7 +16,6 @@ export const ReceiptOptionsModal: React.FC<ReceiptOptionsModalProps> = ({
   onClose,
   onTakePhoto,
   onSelectGallery,
-  onSelectSample,
   title = 'Attach Receipt',
   subtitle = 'Choose how you would like to add receipt proof',
 }) => {
@@ -80,22 +78,6 @@ export const ReceiptOptionsModal: React.FC<ReceiptOptionsModalProps> = ({
               </div>
             </button>
 
-            {/* Use Sample Invoice */}
-            <button
-              onClick={() => {
-                onClose();
-                onSelectSample();
-              }}
-              className="w-full flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/50 border border-slate-200 hover:border-brand-teal/40 transition active:scale-[0.98] text-left group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-xs font-bold text-brand-navy">Use Sample Tax Invoice</h4>
-                <p className="text-[10px] text-brand-muted">Attach pre-formatted sample proof</p>
-              </div>
-            </button>
           </div>
 
           <button

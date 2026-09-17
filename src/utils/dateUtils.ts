@@ -9,6 +9,16 @@ export function getNow(): Date {
  */
 export function formatDate(dateString: string | Date): string {
   if (!dateString) return '—';
+  if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+    const [yearStr, monthStr, dayStr] = dateString.trim().split('-');
+    const d = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10)));
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(d);
+  }
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   if (isNaN(date.getTime())) return '—';
 
@@ -24,6 +34,15 @@ export function formatDate(dateString: string | Date): string {
  */
 export function formatShortDate(dateString: string): string {
   if (!dateString) return '—';
+  if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+    const [yearStr, monthStr, dayStr] = dateString.trim().split('-');
+    const d = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10)));
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    }).format(d);
+  }
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '—';
 
@@ -100,6 +119,15 @@ export function formatRemainingTime(targetDateString: string, refDate: Date = ge
  * Calculate Return Deadline date from purchase date and return window
  */
 export function addDaysToDate(dateString: string, days: number): string {
+  if (!dateString) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+    const [yearStr, monthStr, dayStr] = dateString.trim().split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10) - 1;
+    const day = parseInt(dayStr, 10);
+    const d = new Date(Date.UTC(year, month, day + (days || 0)));
+    return d.toISOString().split('T')[0];
+  }
   const d = new Date(dateString);
   if (isNaN(d.getTime())) return '';
   d.setDate(d.getDate() + days);
@@ -110,6 +138,15 @@ export function addDaysToDate(dateString: string, days: number): string {
  * Calculate Warranty Expiry date from purchase date and months
  */
 export function addMonthsToDate(dateString: string, months: number): string {
+  if (!dateString) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+    const [yearStr, monthStr, dayStr] = dateString.trim().split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10) - 1;
+    const day = parseInt(dayStr, 10);
+    const d = new Date(Date.UTC(year, month + (months || 0), day));
+    return d.toISOString().split('T')[0];
+  }
   const d = new Date(dateString);
   if (isNaN(d.getTime())) return '';
   d.setMonth(d.getMonth() + months);

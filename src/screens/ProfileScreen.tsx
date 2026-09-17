@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProducts } from '../context/ProductContext';
 import { useNotifications } from '../context/NotificationContext';
 import { THEME } from '../constants/theme';
-import { formatPKR } from '../utils/currencyUtils';
+import { formatCurrency, SUPPORTED_CURRENCIES } from '../utils/currencyUtils';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../context/ToastContext';
 import { ClaimVaultLogo } from '../components/ui/ClaimVaultLogo';
@@ -41,7 +41,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   const { 
     preferences, 
     updatePreferences, 
-    sendSampleNotification, 
+    sendTestNotification, 
     openPermissionModal, 
     requestPermission,
     hasPermission,
@@ -144,7 +144,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
               Total Protected Value
             </span>
             <p className="text-lg font-extrabold text-white mt-0.5">
-              {formatPKR(stats.totalProtectedValue || 0)}
+              {formatCurrency(stats.totalProtectedValue || 0, currentCurrency)}
             </p>
           </div>
           <div className="text-right">
@@ -259,7 +259,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => sendSampleNotification()}
+                  onClick={() => sendTestNotification()}
                   className="w-full py-2.5 px-3 rounded-xl bg-teal-50 hover:bg-teal-100/70 border border-teal-200 text-brand-teal text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-sm"
                 >
                   <Bell className="w-3.5 h-3.5" />
@@ -291,7 +291,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
                 <div>
                   <p className="text-xs font-bold text-brand-navy">Display Currency</p>
                   <p className="text-[11px] text-brand-muted">
-                    {currentCurrency === 'PKR' ? 'Pakistani Rupee (PKR)' : `${currentCurrency} selected`}
+                    {SUPPORTED_CURRENCIES[currentCurrency]?.name || currentCurrency} ({SUPPORTED_CURRENCIES[currentCurrency]?.symbol || ''})
                   </p>
                 </div>
               </div>

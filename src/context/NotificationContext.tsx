@@ -28,7 +28,7 @@ interface NotificationContextType {
     item: Omit<PushNotificationItem, 'id' | 'timestamp' | 'isRead' | 'status'>,
     sendToDevice?: boolean
   ) => Promise<boolean>;
-  sendSampleNotification: () => Promise<void>;
+  sendTestNotification: () => Promise<void>;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
@@ -176,16 +176,16 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 
   // Send a clean test notification to verify OS/Device push integration
-  const sendSampleNotification = useCallback(
+  const sendTestNotification = useCallback(
     async () => {
-      const sampleItem = {
+      const testItem = {
         productName: 'ClaimVault Alert',
         title: 'Test Push Notification',
         body: 'This is a test notification. Your device is ready to receive return & warranty alerts.',
         type: 'system' as const,
       };
 
-      await triggerPushNotification(sampleItem, true);
+      await triggerPushNotification(testItem, true);
       const perm = deviceNotificationService.getPermissionStatus();
 
       if (perm === 'granted') {
@@ -255,7 +255,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         closePermissionModal,
         dismissBanner,
         triggerPushNotification,
-        sendSampleNotification,
+        sendTestNotification,
         markAsRead,
         markAllAsRead,
         clearNotifications,

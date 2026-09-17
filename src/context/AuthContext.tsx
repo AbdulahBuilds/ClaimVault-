@@ -88,9 +88,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateProfile = (updates: Partial<UserProfile>) => {
     if (!user) return;
-    const updated = { ...user, ...updates };
+    const updated = authService.updateUser(updates) || { ...user, ...updates };
     setUser(updated);
-    storageService.setItem(STORAGE_KEYS.USER, updated);
   };
 
   return (

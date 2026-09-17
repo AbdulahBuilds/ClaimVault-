@@ -27,12 +27,10 @@ interface PrivacyModalProps {
 
 export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
-  const { products, restoreDefaults, clearAllProducts } = useProducts();
+  const { products, clearAllProducts } = useProducts();
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isResetting, setIsResetting] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   if (!isOpen) return null;
@@ -77,14 +75,6 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleConfirmReset = async () => {
-    setIsResetting(true);
-    await restoreDefaults();
-    setIsResetting(false);
-    setShowResetConfirm(false);
-    showToast('Sample products restored', 'info');
-    onClose();
-  };
 
   const handleConfirmClear = async () => {
     if (clearAllProducts) {
@@ -203,8 +193,8 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
                   <Download className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-brand-navy">Export Vault Backup (JSON)</h4>
-                  <p className="text-[10px] text-brand-muted">Download complete offline snapshot file</p>
+                  <h4 className="text-xs font-bold text-brand-navy">Export Backup (JSON)</h4>
+                  <p className="text-[10px] text-brand-muted">Download complete vault backup</p>
                 </div>
               </div>
             </button>
@@ -220,49 +210,48 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
                   <Upload className="w-4 h-4 text-brand-teal" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-brand-navy">Import Vault Backup (JSON)</h4>
-                  <p className="text-[10px] text-brand-muted">Restore products & receipts from backup</p>
+                  <h4 className="text-xs font-bold text-brand-navy">Import Backup (JSON)</h4>
+                  <p className="text-[10px] text-brand-muted">Restore items & receipts from file</p>
                 </div>
               </div>
             </button>
 
-            {/* Load Sample Products */}
-            {showResetConfirm ? (
-              <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 text-center space-y-2">
-                <p className="text-xs font-bold text-brand-navy">Load fresh sample products into vault?</p>
+            {/* Clear All Vault Data */}
+            {showClearConfirm ? (
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-center space-y-2">
+                <p className="text-xs font-bold text-rose-900">Permanently clear all items from vault?</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     fullWidth
-                    onClick={() => setShowResetConfirm(false)}
+                    onClick={() => setShowClearConfirm(false)}
                   >
                     Cancel
                   </Button>
                   <Button
-                    variant="action"
+                    variant="danger"
                     size="sm"
                     fullWidth
-                    isLoading={isResetting}
-                    onClick={handleConfirmReset}
+                    onClick={handleConfirmClear}
                   >
-                    Load Samples
+                    Clear Vault
                   </Button>
                 </div>
               </div>
             ) : (
               <button
                 type="button"
-                onClick={() => setShowResetConfirm(true)}
-                className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/60 border border-slate-200 text-left flex items-center justify-between transition active:scale-[0.98]"
+                onClick={() => setShowClearConfirm(true)}
+                className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-rose-50/60 border border-slate-200 hover:border-rose-200 text-left flex items-center justify-between transition active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-brand-teal flex items-center justify-center shadow-sm">
-                    <RotateCcw className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-rose-600 flex items-center justify-center shadow-sm">
+                    <Trash2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-brand-navy">Load Sample Demo Items</h4>
-                    <p className="text-[10px] text-brand-muted">Populate vault with demonstrative items</p>
+                    <h4 className="text-xs font-bold text-brand-navy">Clear All Vault Items</h4>
+                    <p className="text-[10px] text-brand-muted">Erase local vault data and start clean</p>
                   </div>
                 </div>
               </button>

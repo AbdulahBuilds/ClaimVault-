@@ -59,6 +59,13 @@ export const CATEGORIES: CategoryOption[] = [
     bgColor: '#D1FAE5',
   },
   {
+    id: 'Vehicles',
+    label: 'Vehicles & Automotive',
+    iconName: 'Car',
+    color: '#E11D48',
+    bgColor: '#FFE4E6',
+  },
+  {
     id: 'Other',
     label: 'Other Items',
     iconName: 'Package',

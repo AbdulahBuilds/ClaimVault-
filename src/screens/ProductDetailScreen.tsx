@@ -20,7 +20,8 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
-import { formatPKR } from '../utils/currencyUtils';
+import { useCurrency } from '../hooks/useCurrency';
+import { formatProductPrice, formatCurrency } from '../utils/currencyUtils';
 import { formatDate, formatRemainingTime, getDaysDifference, getNow } from '../utils/dateUtils';
 import { Badge, CategoryBadge } from '../components/ui/Badge';
 import { CountdownBar } from '../components/ui/CountdownBar';
@@ -50,6 +51,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
 }) => {
   const { user } = useAuth();
   const { products, updateProduct, deleteProduct } = useProducts();
+  const { currency: currentCurrency } = useCurrency();
   const { showToast } = useToast();
   const product = products.find((p) => p.id === productId);
 
@@ -128,23 +130,6 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
     }
   };
 
-  // Handle Sample Receipt Selection
-  const handleSelectSampleReceipt = async () => {
-    const newReceipt: Receipt = {
-      id: `rec-${Date.now()}`,
-      imageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-      fileName: 'Official_Store_Invoice.jpg',
-      uploadedAt: new Date().toISOString(),
-      fileSize: '1.6 MB',
-    };
-
-    try {
-      await updateProduct(product.id, { receipt: newReceipt });
-      showToast('Sample receipt attached successfully', 'success');
-    } catch {
-      showToast('Failed to attach sample receipt', 'error');
-    }
-  };
 
   // Handle Receipt Deletion from Product
   const handleConfirmDeleteReceipt = async () => {
@@ -225,9 +210,16 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
             {product.name}
           </h1>
 
-          <p className="text-xl font-extrabold text-brand-teal mt-1">
-            {formatPKR(product.price)}
-          </p>
+          <div className="flex flex-col items-center mt-1">
+            <p className="text-xl font-extrabold text-brand-teal">
+              {formatProductPrice(product.price, product.currency, currentCurrency)}
+            </p>
+            {product.currency && product.currency.toUpperCase() !== currentCurrency.toUpperCase() && (
+              <span className="text-[11px] text-brand-muted font-medium mt-0.5">
+                (Original: {formatCurrency(product.price, product.currency)})
+              </span>
+            )}
+          </div>
 
           <div className="mt-3">
             <Badge status={product.warranty.status} size="md" />
@@ -373,8 +365,13 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
             <div>
               <span className="text-[11px] text-brand-muted block">Price Paid</span>
               <span className="font-bold text-brand-teal">
-                {formatPKR(product.price)}
+                {formatProductPrice(product.price, product.currency, currentCurrency)}
               </span>
+              {product.currency && product.currency.toUpperCase() !== currentCurrency.toUpperCase() && (
+                <span className="text-[10px] text-brand-muted block">
+                  ({formatCurrency(product.price, product.currency)})
+                </span>
+              )}
             </div>
 
             <div className="col-span-2">
@@ -405,7 +402,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
               </div>
               <div>
                 <h3 className="text-xs font-bold text-brand-navy uppercase tracking-wider">
-                  Digital Receipt & Proof
+                  Receipt & Proof
                 </h3>
               </div>
             </div>
@@ -548,13 +545,12 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
         onDelete={() => setIsDeleteReceiptModalOpen(true)}
       />
 
-      {/* Receipt Options Modal (Take Photo / Gallery / Sample) */}
+      {/* Receipt Options Modal (Take Photo / Gallery) */}
       <ReceiptOptionsModal
         isOpen={isReceiptOptionsOpen}
         onClose={() => setIsReceiptOptionsOpen(false)}
         onTakePhoto={() => cameraInputRef.current?.click()}
         onSelectGallery={() => fileInputRef.current?.click()}
-        onSelectSample={handleSelectSampleReceipt}
         title={product.receipt ? 'Replace Receipt' : 'Attach Receipt'}
         subtitle={`Select proof of purchase for ${product.name}`}
       />

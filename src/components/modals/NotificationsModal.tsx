@@ -32,7 +32,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     markAsRead, 
     markAllAsRead, 
     clearNotifications,
-    sendSampleNotification
+    sendTestNotification
   } = useNotifications();
 
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'scheduled'>('all');
@@ -154,7 +154,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   ClaimVault monitors deadlines and delivers alerts automatically before cutoff dates.
                 </p>
                 <button
-                  onClick={() => sendSampleNotification()}
+                  onClick={() => sendTestNotification()}
                   className="px-3.5 py-2 rounded-xl bg-teal-50 border border-teal-200 text-xs font-bold text-brand-teal hover:bg-teal-100 transition flex items-center gap-1.5 active:scale-95 shadow-sm"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -254,7 +254,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             )}
 
             <button
-              onClick={() => sendSampleNotification()}
+              onClick={() => sendTestNotification()}
               className="text-xs font-bold text-brand-teal bg-teal-50 hover:bg-teal-100/80 border border-teal-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-sm"
               title="Trigger a test device push notification"
             >

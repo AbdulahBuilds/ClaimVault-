@@ -24,7 +24,7 @@ const FAQS: FAQItem[] = [
   },
   {
     q: 'Where are my receipts stored?',
-    a: 'Receipts are encrypted and stored locally in your device vault. In upcoming phases, cloud synchronization will keep receipts backed up across devices.',
+    a: 'Receipts are encrypted and stored securely in your vault, and synced across your authenticated devices.',
   },
   {
     q: 'Can I export my receipts and records?',

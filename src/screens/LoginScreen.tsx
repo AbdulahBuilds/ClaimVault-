@@ -76,20 +76,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    try {
-      await login('demo@claimvault.com', 'password123');
-      showToast('Signed in with Demo Account', 'success');
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
-    } catch {
-      showToast('Demo sign in failed', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="h-full flex flex-col justify-between p-6 bg-white overflow-y-auto">
@@ -172,8 +158,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </span>
         </div>
 
-        {/* Social Login & Demo Login */}
-        <div className="space-y-2.5">
+        {/* Social Login */}
+        <div>
           <button
             type="button"
             onClick={() => setIsGoogleModalOpen(true)}
@@ -199,15 +185,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               />
             </svg>
             <span>Continue with Google</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-teal-50 hover:bg-teal-100/70 border border-teal-200/80 transition active:scale-[0.98] text-xs font-bold text-brand-teal"
-          >
-            <span>⚡ Quick Demo Login (1-Tap)</span>
           </button>
         </div>
       </div>

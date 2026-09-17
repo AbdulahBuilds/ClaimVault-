@@ -28,6 +28,8 @@ import { MobileHeader } from '../components/navigation/MobileHeader';
 import { CATEGORIES } from '../constants/categories';
 import { addDaysToDate, addMonthsToDate, calculateUrgency, getNow } from '../utils/dateUtils';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 import { ExtractedReceiptData } from '../services/aiScannerService';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -46,8 +48,12 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
 }) => {
   const { addProduct } = useProducts();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiPrefilled, setIsAiPrefilled] = useState(false);
+
+  const currentCurrency = (initialData?.currency || user?.currency || 'PKR').toUpperCase();
+  const currentSymbol = getCurrencySymbol(currentCurrency);
 
   const getTodayIso = () => {
     return getNow().toISOString().split('T')[0];
@@ -149,7 +155,7 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
     if (!name.trim()) errs.name = 'Product name is required';
     if (!brand.trim()) errs.brand = 'Brand is required';
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
-      errs.price = 'Please enter a valid price in PKR';
+      errs.price = `Please enter a valid price in ${currentCurrency}`;
     }
     if (!storeName.trim()) errs.storeName = 'Store or seller name is required';
     if (!purchaseDate) errs.purchaseDate = 'Purchase date is required';
@@ -176,7 +182,7 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
         model: model.trim() || 'Standard Model',
         category,
         price: parsedPrice,
-        currency: 'PKR',
+        currency: currentCurrency,
         purchaseDate,
         storeName: storeName.trim(),
         storeLocation: storeLocation.trim() || undefined,
@@ -190,7 +196,7 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
           expiryDate: warrantyExpiryDate,
           status: calculateUrgency(warrantyExpiryDate, now),
           warrantyType,
-          providerName: warrantyProvider.trim() || `${brand} Official Pakistan`,
+          providerName: warrantyProvider.trim() || `${brand || 'Manufacturer'} Care`,
         },
         returnInfo: {
           hasReturnPeriod,
@@ -246,20 +252,21 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
         )}
 
         {/* Hero AI Scanner Trigger Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-brand-navy to-slate-900 border border-amber-500/30 shadow-float p-4 sm:p-5 text-white">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-brand-navy to-teal-950 border border-teal-500/40 shadow-float p-4 sm:p-5 text-white">
           {/* Ambient glowing radial lights */}
-          <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-36 h-36 bg-brand-teal/20 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-28 h-28 bg-brand-navy/60 rounded-full blur-xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col gap-3.5">
             {/* Top Tag & Pulsing Indicator */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-extrabold tracking-wider uppercase">
-                <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-teal/20 border border-brand-teal/40 text-teal-300 text-[10px] font-extrabold tracking-wider uppercase">
+                <Sparkles className="w-3 h-3 text-teal-300 animate-pulse" />
                 <span>AI Receipt Scanner</span>
               </div>
-              <span className="text-[10px] font-extrabold text-white bg-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
-                Coming Soon
+              <span className="text-[10px] font-extrabold text-white bg-brand-teal px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                <Zap className="w-2.5 h-2.5 text-yellow-300" />
+                AI Powered
               </span>
             </div>
 
@@ -269,20 +276,20 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
                 Scan Receipt to Auto-Fill
               </h3>
               <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                Neural Vision AI receipt & invoice scanning is currently in active development. Please fill in the product details below.
+                Take a photo or upload an invoice. AI scanner will automatically detect the product, price, warranty duration, and return window.
               </p>
             </div>
 
             {/* Feature Highlights Pills */}
             <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-200">
               <span className="bg-slate-800/80 border border-slate-700/80 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <Check className="w-2.5 h-2.5 text-amber-400" /> Neural Vision OCR
+                <Check className="w-2.5 h-2.5 text-teal-400" /> Neural Vision OCR
               </span>
               <span className="bg-slate-800/80 border border-slate-700/80 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <Check className="w-2.5 h-2.5 text-amber-400" /> Auto Deadlines
+                <Check className="w-2.5 h-2.5 text-teal-400" /> Auto Deadlines
               </span>
               <span className="bg-slate-800/80 border border-slate-700/80 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                <Check className="w-2.5 h-2.5 text-amber-400" /> Coming Soon
+                <Check className="w-2.5 h-2.5 text-teal-400" /> Instant Pre-Fill
               </span>
             </div>
 
@@ -291,13 +298,12 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
               type="button"
               onClick={() => {
                 triggerHaptic('medium');
-                showToast('AI Receipt Scanner is coming soon! Please enter details manually below.', 'info');
                 onOpenAIScanner();
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-950/40 flex items-center justify-center gap-2 transition active:scale-[0.98] border border-amber-400/40"
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-teal-600 via-brand-teal to-teal-600 hover:from-teal-500 hover:to-teal-600 text-white font-bold text-xs shadow-lg shadow-teal-950/40 flex items-center justify-center gap-2 transition active:scale-[0.98] border border-teal-400/40"
             >
               <Camera className="w-4 h-4 text-white shrink-0" />
-              <span>Scan Receipt with AI (Coming Soon)</span>
+              <span>Scan Receipt with AI</span>
               <ArrowRight className="w-3.5 h-3.5 text-white/80 shrink-0" />
             </button>
           </div>
@@ -380,9 +386,9 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
             />
 
             <InputField
-              label="Purchase Price (PKR)"
+              label={`Purchase Price (${currentCurrency})`}
               type="number"
-              prefixText="Rs."
+              prefixText={currentSymbol}
               placeholder="74999"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -449,12 +455,17 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
                   label="Return Duration"
                   value={returnDays}
                   onChange={(e) => setReturnDays(e.target.value)}
-                  options={[
-                    { value: '3', label: '3 Days' },
-                    { value: '7', label: '7 Days (Standard)' },
-                    { value: '14', label: '14 Days' },
-                    { value: '30', label: '30 Days' },
-                  ]}
+                  options={(() => {
+                    const base = [
+                      { value: '3', label: '3 Days' },
+                      { value: '7', label: '7 Days (Standard)' },
+                      { value: '14', label: '14 Days' },
+                      { value: '30', label: '30 Days' },
+                    ];
+                    return base.some((o) => o.value === returnDays)
+                      ? base
+                      : [{ value: returnDays, label: `${returnDays} Days` }, ...base];
+                  })()}
                 />
 
                 <InputField
@@ -487,6 +498,8 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
               onChange={(e) => {
                 const val = e.target.value;
                 const labels: Record<string, string> = {
+                  '1': '1 Month',
+                  '3': '3 Months',
                   '6': '6 Months',
                   '12': '1 Year',
                   '24': '2 Years',
@@ -496,14 +509,21 @@ export const AddProductScreen: React.FC<AddProductScreenProps> = ({
                 };
                 handleWarrantyMonthsChange(val, labels[val] || `${val} Months`);
               }}
-              options={[
-                { value: '6', label: '6 Months' },
-                { value: '12', label: '1 Year (Standard)' },
-                { value: '24', label: '2 Years' },
-                { value: '36', label: '3 Years' },
-                { value: '60', label: '5 Years' },
-                { value: '120', label: '10 Years (Compressor)' },
-              ]}
+              options={(() => {
+                const base = [
+                  { value: '1', label: '1 Month' },
+                  { value: '3', label: '3 Months' },
+                  { value: '6', label: '6 Months' },
+                  { value: '12', label: '1 Year (Standard)' },
+                  { value: '24', label: '2 Years' },
+                  { value: '36', label: '3 Years' },
+                  { value: '60', label: '5 Years' },
+                  { value: '120', label: '10 Years (Compressor)' },
+                ];
+                return base.some((o) => o.value === warrantyMonths)
+                  ? base
+                  : [{ value: warrantyMonths, label: warrantyDurationLabel || `${warrantyMonths} Months` }, ...base];
+              })()}
             />
 
             <InputField

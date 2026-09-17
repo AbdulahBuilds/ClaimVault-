@@ -1,7 +1,7 @@
 import React from 'react';
 import { Package, Receipt, Clock, ChevronRight } from 'lucide-react';
 import { Product } from '../../types';
-import { formatPKR } from '../../utils/currencyUtils';
+import { formatProductPrice } from '../../utils/currencyUtils';
 import { formatDate } from '../../utils/dateUtils';
 import { triggerHaptic } from '../../utils/haptics';
 import { Badge, CategoryBadge } from '../ui/Badge';
@@ -58,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {product.name}
             </h4>
             <p className="text-[11px] font-bold text-brand-teal mt-0.5">
-              {formatPKR(product.price)}
+              {formatProductPrice(product.price, product.currency)}
             </p>
             <p className="text-[10px] text-brand-muted mt-0.5 truncate">
               Purchased: {formatDate(product.purchaseDate)} • {product.warranty.durationLabel}
@@ -117,7 +117,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <CategoryBadge label={product.category} />
               <span className="text-xs font-bold text-brand-teal">
-                {formatPKR(product.price)}
+                {formatProductPrice(product.price, product.currency)}
               </span>
             </div>
           </div>

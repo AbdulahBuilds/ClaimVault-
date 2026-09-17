@@ -10,6 +10,8 @@ import { MobileHeader } from '../components/navigation/MobileHeader';
 import { CATEGORIES } from '../constants/categories';
 import { calculateUrgency, getNow } from '../utils/dateUtils';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 import { triggerHaptic } from '../utils/haptics';
 
 interface EditProductScreenProps {
@@ -24,8 +26,12 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({
   onCancel,
 }) => {
   const { getProductById, updateProduct } = useProducts();
+  const { user } = useAuth();
   const product = getProductById(productId);
   const { showToast } = useToast();
+
+  const activeCurrency = (product?.currency || user?.currency || 'PKR').toUpperCase();
+  const activeSymbol = getCurrencySymbol(activeCurrency);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -81,6 +87,7 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({
         model: model.trim(),
         category,
         price: parseFloat(price),
+        currency: activeCurrency,
         purchaseDate,
         storeName: storeName.trim(),
         storeLocation: storeLocation.trim() || undefined,
@@ -173,9 +180,9 @@ export const EditProductScreen: React.FC<EditProductScreenProps> = ({
             />
 
             <InputField
-              label="Price (PKR)"
+              label={`Price (${activeCurrency})`}
               type="number"
-              prefixText="Rs."
+              prefixText={activeSymbol}
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               error={errors.price}

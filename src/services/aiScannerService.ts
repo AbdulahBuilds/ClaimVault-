@@ -24,16 +24,7 @@ export interface ExtractedReceiptData {
   receiptImageUrl?: string;
   receiptFileName?: string;
   confidenceScore: number;
-}
-
-export interface SampleReceiptPreset {
-  id: string;
-  label: string;
-  category: ProductCategory;
-  price: number;
-  merchant: string;
-  imageUrl: string;
-  data: ExtractedReceiptData;
+  isAiExtracted?: boolean;
 }
 
 const getTodayIso = () => {
@@ -41,136 +32,63 @@ const getTodayIso = () => {
   return d.toISOString().split('T')[0];
 };
 
-export const SAMPLE_RECEIPT_PRESETS: SampleReceiptPreset[] = [
-  {
-    id: 'samsung-s24',
-    label: 'Samsung Galaxy S24 Ultra (Official Invoice)',
-    category: 'Electronics',
-    price: 399999,
-    merchant: 'ABC Electronics, Lahore',
-    imageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-    data: {
-      name: 'Samsung Galaxy S24 Ultra',
-      brand: 'Samsung',
-      model: '512GB Titanium Black',
-      category: 'Electronics',
-      price: 399999,
-      currency: 'PKR',
-      purchaseDate: getTodayIso(),
-      storeName: 'ABC Electronics',
-      storeLocation: 'Packages Mall, Lahore',
-      invoiceNumber: 'INV-2026-98124',
-      returnDurationDays: 7,
-      hasReturnPeriod: true,
-      returnDeadline: addDaysToDate(getTodayIso(), 7),
-      warrantyMonths: 12,
-      warrantyDurationLabel: '1 Year (Official)',
-      warrantyExpiryDate: addMonthsToDate(getTodayIso(), 12),
-      warrantyType: 'Manufacturer',
-      warrantyProvider: 'Samsung Pakistan Care',
-      notes: 'Includes 1-year screen replacement protection.',
-      receiptImageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-      receiptFileName: 'Samsung_Invoice_INV98124.jpg',
-      confidenceScore: 0.98,
-    },
-  },
-  {
-    id: 'dell-xps',
-    label: 'Dell XPS 15 Laptop (Hafeez Centre)',
-    category: 'Computing',
-    price: 289999,
-    merchant: 'Hafeez Centre Computers, Lahore',
-    imageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-    data: {
-      name: 'Dell XPS 15 (9530)',
-      brand: 'Dell',
-      model: 'Intel Core i9 32GB 1TB OLED',
-      category: 'Computing',
-      price: 289999,
-      currency: 'PKR',
-      purchaseDate: getTodayIso(),
-      storeName: 'Mega Tech Hafeez Centre',
-      storeLocation: 'Gulberg III, Lahore',
-      invoiceNumber: 'HC-DEL-44120',
-      returnDurationDays: 14,
-      hasReturnPeriod: true,
-      returnDeadline: addDaysToDate(getTodayIso(), 14),
-      warrantyMonths: 24,
-      warrantyDurationLabel: '2 Years ProSupport',
-      warrantyExpiryDate: addMonthsToDate(getTodayIso(), 24),
-      warrantyType: 'Manufacturer',
-      warrantyProvider: 'Dell Premier Partner PK',
-      notes: 'Next business day on-site support included.',
-      receiptImageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-      receiptFileName: 'Dell_XPS_Tax_Invoice.pdf',
-      confidenceScore: 0.96,
-    },
-  },
-  {
-    id: 'haier-ac',
-    label: 'Haier Inverter Air Conditioner 1.5 Ton',
-    category: 'Appliances',
-    price: 149000,
-    merchant: 'Metro Electronics, Karachi',
-    imageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-    data: {
-      name: 'Haier Pearl Inverter AC 1.5 Ton',
-      brand: 'Haier',
-      model: 'HSU-18HNS/012USD(T3)',
-      category: 'Appliances',
-      price: 149000,
-      currency: 'PKR',
-      purchaseDate: getTodayIso(),
-      storeName: 'Metro Electronics Mega Store',
-      storeLocation: 'Clifton, Karachi',
-      invoiceNumber: 'MTR-2026-7731',
-      returnDurationDays: 7,
-      hasReturnPeriod: true,
-      returnDeadline: addDaysToDate(getTodayIso(), 7),
-      warrantyMonths: 120,
-      warrantyDurationLabel: '10 Years (Compressor)',
-      warrantyExpiryDate: addMonthsToDate(getTodayIso(), 120),
-      warrantyType: 'Manufacturer',
-      warrantyProvider: 'Haier Pakistan Service',
-      notes: '10 years compressor warranty + 1 year PCB warranty.',
-      receiptImageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-      receiptFileName: 'Haier_AC_Tax_Receipt.jpg',
-      confidenceScore: 0.97,
-    },
-  },
-  {
-    id: 'philips-blender',
-    label: 'Philips Daily Collection Blender & Grinder',
-    category: 'Kitchen',
-    price: 18500,
-    merchant: 'Carrefour Lucky One, Karachi',
-    imageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-    data: {
-      name: 'Philips Daily Collection Blender 450W',
-      brand: 'Philips',
-      model: 'HR2058/90 with 2 Mills',
-      category: 'Kitchen',
-      price: 18500,
-      currency: 'PKR',
-      purchaseDate: getTodayIso(),
-      storeName: 'Carrefour Hypermarket',
-      storeLocation: 'Lucky One Mall, Karachi',
-      invoiceNumber: 'CRF-POS-892144',
-      returnDurationDays: 30,
-      hasReturnPeriod: true,
-      returnDeadline: addDaysToDate(getTodayIso(), 30),
-      warrantyMonths: 24,
-      warrantyDurationLabel: '2 Years Global Warranty',
-      warrantyExpiryDate: addMonthsToDate(getTodayIso(), 24),
-      warrantyType: 'Manufacturer',
-      warrantyProvider: 'Philips Domestic Appliances PK',
-      notes: 'Receipt verified at Carrefour checkout counter.',
-      receiptImageUrl: 'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-      receiptFileName: 'Carrefour_Cash_Bill.jpg',
-      confidenceScore: 0.99,
-    },
-  },
-];
+// Helper functions for cleaning & sanitizing extracted values
+function cleanPrice(val: any): number {
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (typeof val === 'string') {
+    const num = parseFloat(val.replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? 0 : num;
+  }
+  return 0;
+}
+
+function cleanWarrantyMonths(val: any): number {
+  if (typeof val === 'number') return isNaN(val) ? 12 : Math.max(0, Math.round(val));
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase();
+    if (lower.includes('year')) {
+      const yrs = parseFloat(val.replace(/[^0-9.]/g, ''));
+      return isNaN(yrs) ? 12 : Math.round(yrs * 12);
+    }
+    const m = parseInt(val.replace(/[^0-9]/g, ''), 10);
+    return isNaN(m) ? 12 : Math.max(0, m);
+  }
+  return 12;
+}
+
+function cleanReturnDays(val: any): number {
+  if (typeof val === 'number') return isNaN(val) ? 7 : Math.max(0, Math.round(val));
+  if (typeof val === 'string') {
+    const d = parseInt(val.replace(/[^0-9]/g, ''), 10);
+    return isNaN(d) ? 7 : Math.max(0, d);
+  }
+  return 7;
+}
+
+function normalizeCategory(cat: string | undefined): ProductCategory {
+  if (!cat) return 'Electronics';
+  const c = cat.toLowerCase().trim();
+  if (c.includes('comput') || c.includes('laptop') || c.includes('pc') || c.includes('mac') || c.includes('monitor')) return 'Computing';
+  if (c.includes('audio') || c.includes('headphone') || c.includes('earphone') || c.includes('sound') || c.includes('speaker') || c.includes('mic')) return 'Audio';
+  if (c.includes('wear') || c.includes('watch') || c.includes('band') || c.includes('fitness')) return 'Wearables';
+  if (c.includes('kitchen') || c.includes('blender') || c.includes('cooker') || c.includes('fryer') || c.includes('oven') || c.includes('microwave') || c.includes('kettle')) return 'Kitchen';
+  if (c.includes('appliance') || c.includes('refriger') || c.includes('ac') || c.includes('air conditioner') || c.includes('washing') || c.includes('heater')) return 'Appliances';
+  if (c.includes('vehicle') || c.includes('car') || c.includes('bike') || c.includes('auto') || c.includes('motor')) return 'Vehicles';
+  if (c.includes('home') || c.includes('furnit') || c.includes('light') || c.includes('bed') || c.includes('decor')) return 'Home';
+  if (c.includes('phone') || c.includes('electronic') || c.includes('tv') || c.includes('display') || c.includes('tablet') || c.includes('camera')) return 'Electronics';
+  return 'Other';
+}
+
+function normalizeDate(dStr: string | undefined, defaultDate: string): string {
+  if (!dStr) return defaultDate;
+  const trimmed = dStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split('T')[0];
+  }
+  return defaultDate;
+}
 
 class AIScannerService {
   private getApiKey(): string {
@@ -207,35 +125,67 @@ class AIScannerService {
   }
 
   /**
-   * Calls Google Gemini Vision API to analyze receipt image and extract structured JSON
+   * Calls AI Vision API to analyze receipt image and extract structured JSON
    */
   private async callGeminiVision(base64Data: string, mimeType: string): Promise<Partial<ExtractedReceiptData> | null> {
     const apiKey = this.getApiKey();
-    if (!apiKey) return null;
+    if (!apiKey) {
+      console.warn('[AIScanner] Missing VITE_GEMINI_API_KEY in environment');
+      return null;
+    }
 
-    const models = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-3.5-flash'];
-    const prompt = `You are ClaimVault AI, an expert at reading invoices, bills, cash slips, and warranty receipts.
-Analyze this receipt image and extract all product and purchase details.
-Return ONLY a single valid JSON object without markdown formatting or codeblocks:
+    // List active, supported models in order of priority
+    const models = [
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-latest',
+      'gemini-3.7-flash',
+      'gemini-3-flash-preview',
+      'gemini-2.5-pro',
+    ];
+
+    const prompt = `You are ClaimVault AI, an expert invoice, receipt, warranty card, and bill OCR parser.
+Analyze this invoice/receipt image carefully and extract all product, purchase, store, warranty, and return policy details.
+
+STRICT FACTUALITY & ANTI-HALLUCINATION RULES:
+- ONLY extract information that is explicitly and visibly written on the receipt image.
+- NEVER guess, assume, extrapolate, or append country names (such as "India", "Pakistan", "USA", etc.) or city names unless that exact word/country is visibly printed on the receipt.
+- Do NOT infer geographical locations from brand names, store names, currencies, tax formats, or company registrations.
+
+Extraction Rules:
+1. Product Details: Extract the primary purchased item name (e.g., "Samsung Galaxy S24 Ultra", "Haier Pearl Inverter AC 1.5 Ton"), Brand name (e.g. "Samsung", "Apple", "Dell", "Haier", "Philips", "Sony"), and specific Model/specs.
+2. Category: Categorize into exactly one of: "Electronics", "Computing", "Audio", "Appliances", "Kitchen", "Wearables", "Home", "Vehicles", "Other".
+3. Price & Currency: Extract the total price paid as a clean integer/float number without commas (e.g. 149000, 399999). Extract the currency symbol/code (e.g., "PKR", "USD", "INR", "EUR", "GBP", "AED") based solely on what is printed on the invoice.
+4. Purchase Date: Extract the invoice/purchase date in strict "YYYY-MM-DD" ISO format. If missing or illegible, use today's date (${getTodayIso()}).
+5. Store & Invoice: Extract the merchant/store name and invoice or receipt number. For "storeLocation", include ONLY the city/branch explicitly printed on the receipt. If no location or address is printed, return an empty string "". NEVER append unprinted country names.
+6. Warranty Terms: Extract warranty duration in months (e.g., 12, 24, 36; or 0 if no warranty), warranty label (e.g. "1 Year", "2 Years"), warranty type ("Manufacturer" | "Extended" | "Store"), and warranty provider. For "warrantyProvider", extract only the exact entity/brand printed. Do NOT add country suffixes (e.g., do not convert "Samsung" into "Samsung India").
+7. Return Policy: Extract return window days (e.g. 7, 14, 30; or 0 if no returns allowed), hasReturnPeriod (boolean). If not specified on receipt, default to 7 days.
+8. Calculated Deadlines: Calculate returnDeadline (purchaseDate + returnDurationDays) and warrantyExpiryDate (purchaseDate + warrantyMonths) in strict "YYYY-MM-DD" format.
+9. Notes: Provide a concise summary of extracted terms, coverage, or serial numbers visibly present on the receipt. Do not add inferred country assumptions.
+10. Confidence: A realistic score between 0.85 and 0.99 representing scan readability.
+
+Return ONLY a valid JSON object matching this schema:
 {
-  "name": "Product name (e.g. Samsung Galaxy S24, Haier 1.5 Ton AC, Dell XPS 15)",
-  "brand": "Brand name (e.g. Samsung, Apple, Dell, Haier, Dawlance, Philips, Sony)",
-  "model": "Model or variant details",
-  "category": "Electronics" | "Appliances" | "Computing" | "Audio" | "Kitchen" | "Wearables" | "Home" | "Vehicles" | "Other",
-  "price": number in PKR (e.g. 149000, numbers only without commas),
-  "currency": "PKR",
+  "name": string,
+  "brand": string,
+  "model": string,
+  "category": "Electronics" | "Computing" | "Audio" | "Appliances" | "Kitchen" | "Wearables" | "Home" | "Vehicles" | "Other",
+  "price": number,
+  "currency": string,
   "purchaseDate": "YYYY-MM-DD",
-  "storeName": "Store or merchant name",
-  "storeLocation": "Store branch or city",
-  "invoiceNumber": "Receipt or invoice number",
-  "returnDurationDays": number (e.g. 7, 14, 30, or 0 if none),
+  "storeName": string,
+  "storeLocation": string,
+  "invoiceNumber": string,
+  "returnDurationDays": number,
   "hasReturnPeriod": boolean,
-  "warrantyMonths": number (e.g. 12, 24, 120),
-  "warrantyDurationLabel": "e.g. 1 Year, 2 Years, 10 Years",
+  "returnDeadline": "YYYY-MM-DD",
+  "warrantyMonths": number,
+  "warrantyDurationLabel": string,
+  "warrantyExpiryDate": "YYYY-MM-DD",
   "warrantyType": "Manufacturer" | "Extended" | "Store",
-  "warrantyProvider": "Warranty provider name",
-  "notes": "Short summary of extracted terms, serial number, and policy",
-  "confidenceScore": number (0.9 to 1.0)
+  "warrantyProvider": string,
+  "notes": string,
+  "confidenceScore": number
 }`;
 
     for (const model of models) {
@@ -259,6 +209,10 @@ Return ONLY a single valid JSON object without markdown formatting or codeblocks
                   ],
                 },
               ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.1,
+              },
             }),
           }
         );
@@ -267,16 +221,23 @@ Return ONLY a single valid JSON object without markdown formatting or codeblocks
           const result = await response.json();
           const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
           if (rawText) {
-            // Clean markdown backticks if present
-            const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-            const parsed = JSON.parse(cleanJson);
+            const cleanText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const firstBrace = cleanText.indexOf('{');
+            const lastBrace = cleanText.lastIndexOf('}');
+            const jsonStr = (firstBrace !== -1 && lastBrace !== -1)
+              ? cleanText.substring(firstBrace, lastBrace + 1)
+              : cleanText;
+            
+            const parsed = JSON.parse(jsonStr);
             if (parsed && typeof parsed === 'object') {
               return parsed;
             }
           }
+        } else {
+          console.warn(`[AIScanner] Model ${model} returned status ${response.status}`);
         }
       } catch (err) {
-        console.warn(`[AIScanner] Model ${model} failed, trying next:`, err);
+        console.warn(`[AIScanner] Model ${model} request failed:`, err);
       }
     }
 
@@ -284,62 +245,52 @@ Return ONLY a single valid JSON object without markdown formatting or codeblocks
   }
 
   /**
-   * Scans a receipt image using Google Gemini Vision or curated realistic presets
+   * Scans a receipt image using AI Vision OCR
    */
   public async scanReceipt(
     imageUrl: string,
-    fileName: string = 'Uploaded_Receipt.jpg',
-    presetId?: string
+    fileName: string = 'Uploaded_Receipt.jpg'
   ): Promise<ExtractedReceiptData> {
     const today = getTodayIso();
 
-    // 1. If matching preset exists, use curated realistic data
-    if (presetId) {
-      const match = SAMPLE_RECEIPT_PRESETS.find((p) => p.id === presetId);
-      if (match) {
-        await new Promise((r) => setTimeout(r, 1200));
-        return {
-          ...match.data,
-          receiptImageUrl: imageUrl || match.imageUrl,
-          receiptFileName: fileName || match.data.receiptFileName,
-        };
-      }
-    }
-
-    // 2. Real Google Gemini Vision OCR scanning
+    // AI Vision OCR scanning
     if (imageUrl) {
       try {
         const base64Info = await this.imageToBase64(imageUrl);
         if (base64Info && base64Info.data) {
           const geminiResult = await this.callGeminiVision(base64Info.data, base64Info.mimeType);
           if (geminiResult && geminiResult.name) {
-            const purchaseDate = geminiResult.purchaseDate || today;
-            const returnDurationDays = typeof geminiResult.returnDurationDays === 'number' ? geminiResult.returnDurationDays : 7;
+            const purchaseDate = normalizeDate(geminiResult.purchaseDate, today);
+            const returnDurationDays = cleanReturnDays(geminiResult.returnDurationDays);
             const hasReturnPeriod = Boolean(geminiResult.hasReturnPeriod ?? returnDurationDays > 0);
-            const returnDeadline = addDaysToDate(purchaseDate, returnDurationDays);
+            const returnDeadline = geminiResult.returnDeadline && /^\d{4}-\d{2}-\d{2}$/.test(geminiResult.returnDeadline)
+              ? geminiResult.returnDeadline
+              : addDaysToDate(purchaseDate, returnDurationDays);
 
-            const warrantyMonths = typeof geminiResult.warrantyMonths === 'number' ? geminiResult.warrantyMonths : 12;
-            const warrantyExpiryDate = addMonthsToDate(purchaseDate, warrantyMonths);
-            const warrantyDurationLabel = geminiResult.warrantyDurationLabel || `${warrantyMonths >= 12 ? Math.round(warrantyMonths / 12) + ' Year' + (warrantyMonths > 12 ? 's' : '') : warrantyMonths + ' Months'}`;
+            const warrantyMonths = cleanWarrantyMonths(geminiResult.warrantyMonths);
+            const warrantyExpiryDate = geminiResult.warrantyExpiryDate && /^\d{4}-\d{2}-\d{2}$/.test(geminiResult.warrantyExpiryDate)
+              ? geminiResult.warrantyExpiryDate
+              : addMonthsToDate(purchaseDate, warrantyMonths);
+            
+            const warrantyDurationLabel = geminiResult.warrantyDurationLabel || 
+              (warrantyMonths >= 12
+                ? `${Math.round(warrantyMonths / 12)} Year${warrantyMonths > 12 ? 's' : ''}`
+                : `${warrantyMonths} Months`);
 
-            const validCategories: ProductCategory[] = [
-              'Electronics', 'Appliances', 'Computing', 'Audio', 'Kitchen', 'Wearables', 'Home', 'Vehicles', 'Other'
-            ];
-            const category: ProductCategory = validCategories.includes(geminiResult.category as ProductCategory)
-              ? (geminiResult.category as ProductCategory)
-              : 'Electronics';
+            const category: ProductCategory = normalizeCategory(geminiResult.category);
+            const price = cleanPrice(geminiResult.price);
 
             return {
-              name: geminiResult.name || 'Purchased Item',
-              brand: geminiResult.brand || '',
-              model: geminiResult.model || '',
+              name: (geminiResult.name || 'Purchased Item').trim(),
+              brand: (geminiResult.brand || '').trim(),
+              model: (geminiResult.model || '').trim(),
               category,
-              price: Number(geminiResult.price) || 0,
+              price,
               currency: geminiResult.currency || 'PKR',
               purchaseDate,
-              storeName: geminiResult.storeName || 'Retail Store',
-              storeLocation: geminiResult.storeLocation || '',
-              invoiceNumber: geminiResult.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+              storeName: (geminiResult.storeName || 'Retail Store').trim(),
+              storeLocation: (geminiResult.storeLocation || '').trim(),
+              invoiceNumber: (geminiResult.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`).trim(),
               returnDurationDays,
               hasReturnPeriod,
               returnDeadline,
@@ -347,45 +298,22 @@ Return ONLY a single valid JSON object without markdown formatting or codeblocks
               warrantyDurationLabel,
               warrantyExpiryDate,
               warrantyType: (geminiResult.warrantyType as any) || 'Manufacturer',
-              warrantyProvider: geminiResult.warrantyProvider || geminiResult.brand || 'Official Manufacturer',
-              notes: geminiResult.notes || 'Extracted via Google Gemini Vision AI.',
+              warrantyProvider: (geminiResult.warrantyProvider || geminiResult.brand || 'Manufacturer Care').trim(),
+              notes: geminiResult.notes || 'Scanned with AI Scanner.',
               receiptImageUrl: imageUrl,
               receiptFileName: fileName,
-              confidenceScore: typeof geminiResult.confidenceScore === 'number' ? geminiResult.confidenceScore : 0.96,
+              confidenceScore: typeof geminiResult.confidenceScore === 'number' ? geminiResult.confidenceScore : 0.95,
+              isAiExtracted: true,
             };
           }
         }
       } catch (err) {
-        console.warn('[AIScanner] Gemini extraction error fallback:', err);
+        console.warn('[AIScanner] Gemini extraction error:', err);
       }
     }
 
-    // 3. Intelligent fallback parser
-    await new Promise((r) => setTimeout(r, 1200));
-    return {
-      name: 'Smart Electronic Device',
-      brand: 'Premium Brand',
-      model: 'Model-2026 Pro',
-      category: 'Electronics',
-      price: 49999,
-      currency: 'PKR',
-      purchaseDate: today,
-      storeName: 'Authorized Retail Store',
-      storeLocation: 'Retail Mall, Karachi',
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-      returnDurationDays: 7,
-      hasReturnPeriod: true,
-      returnDeadline: addDaysToDate(today, 7),
-      warrantyMonths: 12,
-      warrantyDurationLabel: '1 Year Standard',
-      warrantyExpiryDate: addMonthsToDate(today, 12),
-      warrantyType: 'Manufacturer',
-      warrantyProvider: 'Manufacturer Warranty Care',
-      notes: 'AI scanned from digital receipt image with 95% confidence.',
-      receiptImageUrl: imageUrl,
-      receiptFileName: fileName,
-      confidenceScore: 0.95,
-    };
+    // 3. If scanning could not extract details, throw descriptive error so UI can alert the user
+    throw new Error('AI could not recognize receipt details from this image. Please upload a clear photo or enter the product details manually.');
   }
 }
 

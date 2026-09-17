@@ -19,9 +19,7 @@ class AuthService {
    * Retrieves all registered email-password credentials
    */
   public getCredentials(): Record<string, string> {
-    return storageService.getItem<Record<string, string>>(CREDENTIALS_STORAGE_KEY) || {
-      'demo@claimvault.com': 'password123',
-    };
+    return storageService.getItem<Record<string, string>>(CREDENTIALS_STORAGE_KEY) || {};
   }
 
   public saveCredentials(creds: Record<string, string>): void {
@@ -268,6 +266,23 @@ class AuthService {
     await new Promise((r) => setTimeout(r, 100));
     storageService.removeItem(STORAGE_KEYS.USER);
     storageService.removeItem(STORAGE_KEYS.LEGACY_USER);
+  }
+
+  public updateUser(updates: Partial<UserProfile>): UserProfile | null {
+    const current = this.getUser();
+    if (!current) return null;
+    const updated = { ...current, ...updates };
+    storageService.setItem(STORAGE_KEYS.USER, updated);
+
+    if (updated.email) {
+      const email = updated.email.toLowerCase().trim();
+      const registered = storageService.getItem<Record<string, UserProfile>>(USERS_REGISTRY_KEY) || {};
+      registered[email] = updated;
+      storageService.setItem(USERS_REGISTRY_KEY, registered);
+    }
+
+    cloudSyncService.syncUserToCloud(updated).catch(() => {});
+    return updated;
   }
 
   // ==========================================

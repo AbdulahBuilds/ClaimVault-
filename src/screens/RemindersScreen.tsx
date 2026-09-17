@@ -86,16 +86,7 @@ export const RemindersScreen: React.FC<RemindersScreenProps> = ({
       </div>
 
       {/* Main Scrollable Reminders Feed */}
-      <div className="p-4 space-y-5 pb-12 flex-1 w-full max-w-full overflow-y-auto no-scrollbar">
-        {/* Timing Rules Info Bar */}
-        <div className="p-3 rounded-2xl bg-slate-100/80 border border-slate-200/80 text-[11px] text-brand-muted flex items-start gap-2.5 shadow-sm">
-          <Info className="w-4 h-4 text-brand-teal shrink-0 mt-0.5" />
-          <div className="leading-snug">
-            <span className="font-bold text-brand-navy block">Automated Rule Engine</span>
-            <span>Alerts automatically trigger at <strong>7 days</strong>, <strong>3 days</strong>, <strong>1 day before</strong> & <strong>on deadline</strong>.</span>
-          </div>
-        </div>
-
+      <div className="p-4 space-y-4 pb-12 flex-1 w-full max-w-full overflow-y-auto no-scrollbar">
         {/* Expired Alert Banner if any exist */}
         {expiredCount > 0 && filterType !== 'completed' && (
           <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-between text-xs text-rose-900 shadow-sm">

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { Product, Reminder, SummaryStats, FilterType, ProductCategory, SortType } from '../types';
 import { productService } from '../services/productService';
 import { calculateUrgency, getDaysDifference, getNow } from '../utils/dateUtils';
+import { convertCurrency } from '../utils/currencyUtils';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
 import { storageService, STORAGE_KEYS } from '../services/storageService';
@@ -25,8 +26,6 @@ interface ProductContextType {
   deleteProduct: (id: string) => Promise<boolean>;
   getProductById: (id: string) => Product | undefined;
   dismissReminder: (reminderId: string) => void;
-  restoreDefaults: () => Promise<void>;
-  loadSampleData: () => Promise<void>;
   clearAllProducts: () => Promise<void>;
 }
 
@@ -104,9 +103,11 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     let expiringSoon = 0;
     let returnDeadlinesActive = 0;
     let totalProtectedValue = 0;
+    const userCurrency = (user?.currency || 'PKR').toUpperCase();
 
     dynamicProducts.forEach((p) => {
-      totalProtectedValue += p.price || 0;
+      const convertedPrice = convertCurrency(p.price || 0, p.currency || 'PKR', userCurrency);
+      totalProtectedValue += convertedPrice;
 
       if (p.warranty.status === 'safe') {
         activeWarranties++;
@@ -126,7 +127,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       returnDeadlinesActive,
       totalProtectedValue,
     };
-  }, [dynamicProducts]);
+  }, [dynamicProducts, user?.currency]);
 
   // Generate and categorize Reminders for Phase 06
   const reminders = useMemo<Reminder[]>(() => {
@@ -192,6 +193,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           timeBucket: bucket,
           isCompleted,
           productPrice: p.price,
+          productCurrency: p.currency || 'PKR',
           imageUrl: p.imageUrl,
           ruleLabel,
         });
@@ -260,6 +262,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           timeBucket: bucket,
           isCompleted,
           productPrice: p.price,
+          productCurrency: p.currency || 'PKR',
           imageUrl: p.imageUrl,
           ruleLabel,
         });
@@ -386,21 +389,6 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
   };
 
-  const restoreDefaults = async () => {
-    const defaults = await productService.resetToDefault(userKey || undefined);
-    setProducts(defaults);
-    setDismissedReminders([]);
-    const remindersKey = getRemindersStorageKey(userKey);
-    storageService.removeItem(remindersKey);
-    showToast('Reset sample products to default', 'info');
-  };
-
-  const loadSampleData = async () => {
-    const samples = await productService.loadSampleData(userKey || undefined);
-    setProducts(samples);
-    showToast('Loaded 12 sample products into vault', 'success');
-  };
-
   const clearAllProducts = async () => {
     await productService.clearAll(userKey || undefined);
     setProducts([]);
@@ -431,8 +419,6 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         deleteProduct,
         getProductById,
         dismissReminder,
-        restoreDefaults,
-        loadSampleData,
         clearAllProducts,
       }}
     >

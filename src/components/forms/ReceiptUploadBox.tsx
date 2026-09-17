@@ -51,19 +51,6 @@ export const ReceiptUploadBox: React.FC<ReceiptUploadBoxProps> = ({ receipt, onC
     }
   };
 
-  const handleSimulatePreset = (imageUrl: string, fileName: string) => {
-    triggerHaptic('selection');
-    setPreviewUrl(imageUrl);
-    const newReceipt: Receipt = {
-      id: `rec-${Date.now()}`,
-      imageUrl,
-      fileName,
-      uploadedAt: new Date().toISOString(),
-      fileSize: '1.8 MB',
-    };
-    onChange(newReceipt);
-    showToast(`Attached sample: ${fileName}`, 'success');
-  };
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -197,51 +184,6 @@ export const ReceiptUploadBox: React.FC<ReceiptUploadBoxProps> = ({ receipt, onC
               <ImageIcon className="w-3.5 h-3.5" />
               <span>Gallery</span>
             </button>
-          </div>
-
-          {/* Sample Preset Invoices */}
-          <div className="mt-3.5 pt-3 border-t border-slate-200/80 w-full flex flex-col items-center gap-1.5">
-            <span className="text-[10px] font-semibold text-brand-muted">
-              Or test with sample Pakistani invoices:
-            </span>
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              <button
-                type="button"
-                onClick={() =>
-                  handleSimulatePreset(
-                    'https://images.unsplash.com/photo-1554415707-9e4c018a482d?w=800&auto=format&fit=crop&q=80',
-                    'Samsung_Galaxy_Invoice_Lahore.jpg'
-                  )
-                }
-                className="text-[10px] font-bold text-brand-navy bg-white border border-slate-200 hover:border-brand-teal px-2 py-1 rounded-lg transition active:scale-95 shadow-2xs"
-              >
-                📱 Samsung Invoice
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  handleSimulatePreset(
-                    'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80',
-                    'Haier_Inverter_AC_Receipt.jpg'
-                  )
-                }
-                className="text-[10px] font-bold text-brand-navy bg-white border border-slate-200 hover:border-brand-teal px-2 py-1 rounded-lg transition active:scale-95 shadow-2xs"
-              >
-                ❄️ Haier AC Bill
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  handleSimulatePreset(
-                    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&auto=format&fit=crop&q=80',
-                    'Dawlance_MegaStore_Receipt.jpg'
-                  )
-                }
-                className="text-[10px] font-bold text-brand-navy bg-white border border-slate-200 hover:border-brand-teal px-2 py-1 rounded-lg transition active:scale-95 shadow-2xs"
-              >
-                🏪 Imtiaz / Metro Slip
-              </button>
-            </div>
           </div>
         </div>
       )}

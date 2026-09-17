@@ -32,7 +32,6 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
     setSelectedCategory,
     sortBy,
     setSortBy,
-    loadSampleData,
   } = useProducts();
 
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -232,17 +231,6 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
               className="my-4"
             />
 
-            {products.length === 0 && !searchQuery && activeFilter === 'all' && (
-              <div className="text-center pb-2">
-                <button
-                  type="button"
-                  onClick={loadSampleData}
-                  className="text-xs font-bold text-brand-teal hover:underline py-2 px-4 rounded-xl bg-teal-50 border border-teal-200"
-                >
-                  Load 12 Sample Catalog Items
-                </button>
-              </div>
-            )}
           </div>
         ) : (
           filteredProducts.map((product) => (
