@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProductProvider } from './context/ProductContext';
 import { NotificationProvider, useNotifications } from './context/NotificationContext';
@@ -6,6 +7,7 @@ import { ToastProvider } from './context/ToastContext';
 import { MobileDeviceFrame } from './components/ui/MobileDeviceFrame';
 import { BottomTabBar, TabKey } from './components/navigation/BottomTabBar';
 import { PushNotificationBanner } from './components/ui/PushNotificationBanner';
+import { SplashScreen } from './components/ui/SplashScreen';
 
 // Screens
 import { OnboardingScreen } from './screens/OnboardingScreen';
@@ -44,6 +46,9 @@ const AppNavigator: React.FC = () => {
     closePermissionModal, 
     requestPermission 
   } = useNotifications();
+
+  // Splash Screen State
+  const [showSplash, setShowSplash] = useState(true);
 
   // Navigation State
   const [currentView, setCurrentView] = useState<AppView>(() => {
@@ -90,6 +95,16 @@ const AppNavigator: React.FC = () => {
   return (
     <MobileDeviceFrame>
       <div className="w-full h-full flex flex-col bg-brand-bg relative overflow-hidden select-none">
+        {/* Animated App Splash Screen */}
+        <AnimatePresence>
+          {showSplash && (
+            <SplashScreen
+              onFinish={() => setShowSplash(false)}
+              duration={2200}
+            />
+          )}
+        </AnimatePresence>
+
         {/* In-App Floating Push Notification Alert Banner */}
         <PushNotificationBanner
           notification={activeBanner}
